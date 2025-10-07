@@ -3,11 +3,11 @@
 ## Make sure that our web application meets all of the following requirements to get a good grade
 
 # Flow
-+ [ ] **clean** and **consistent** layout (in other words - Vishal, make sure you don't put too much into a single page)
-+ [ ] navigate entirely via keyboard (no mouse required)
-+ [ ] clearly see what’s focused when tabbing
-+ [ ] use at least two ways to locate pages (e.g., a navigation menu and a search bar or breadcrumbs)
-+ [ ] never lose their place — avoid sudden layout or focus shifts
++ [x] **clean** and **consistent** layout (in other words - Vishal, make sure you don't put too much into a single page)
++ [x] navigate entirely via keyboard (no mouse required)
++ [x] clearly see what’s focused when tabbing
++ [x] use at least two ways to locate pages (e.g., a navigation menu and a search bar or breadcrumbs)
++ [x] never lose their place — avoid sudden layout or focus shifts
 
 
 # Design
