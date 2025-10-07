@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About - NCR Management System</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header role="banner">
+    <div class="header-container">
+      <img src="logo.png" alt="NCR Management System Logo" class="logo">
+      
+      <!-- Hamburger menu toggle (hidden checkbox) -->
+      <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation menu">
+      <label for="nav-toggle" class="nav-toggle-label">
+        <span class="hamburger"></span>
+      </label>
+      
+      <nav role="navigation" aria-label="Main navigation" class="nav">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html" aria-current="page">About</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <nav aria-label="Breadcrumb" class="breadcrumb">
+    <ol>
+      <li><a href="index.html">Home</a></li>
+      <li><span aria-current="page">About</span></li>
+    </ol>
+  </nav>
+
+  <main role="main">
+    <h1>About NCR Management System</h1>
+
+    <section class="about-content">
+      <div class="about-message">
+        <div class="logo-container">
+          <img src="logo.png" alt="NCR Management System Logo" class="about-logo">
+        </div>
+        <div class="message-container">
+          <p class="main-message">Hey, let's make it cool</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
