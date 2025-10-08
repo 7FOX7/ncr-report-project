@@ -592,12 +592,100 @@ a:focus {
   max-width: 800px;
 }
 
+/* Form containers on desktop should take 70-80% of viewport width */
+@media (min-width: 768px) {
+  .ncr-form {
+    max-width: 75vw;
+  }
+}
+
 fieldset {
   border: 2px solid #dee2e6;
   border-radius: 8px;
   margin-bottom: 2rem;
   padding: 1.5rem;
   background: #fff;
+}
+
+/* Collapsible fieldsets with radio button controls */
+.collapsible-fieldset {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  overflow: hidden;
+  background: #fff;
+  padding: 0;
+}
+
+.fieldset-toggle {
+  display: none;
+}
+
+.fieldset-toggle-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+  cursor: pointer;
+  background: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+  transition: background-color 0.2s ease;
+  user-select: none;
+  margin: 0;
+}
+
+.fieldset-toggle-label:hover {
+  background: rgb(220, 220, 220);
+}
+
+.fieldset-toggle-label legend {
+  margin: 0;
+  padding: 0;
+  font-weight: 600;
+  font-size: 1.1em;
+  color: #333;
+  border: none;
+  background: none;
+  width: auto;
+  pointer-events: none;
+}
+
+.fieldset-toggle-icon {
+  transition: transform 0.2s ease;
+  font-size: 0.9em;
+  color: #666;
+}
+
+.fieldset-content {
+  padding: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+}
+
+/* When radio button is checked, show the content */
+.fieldset-toggle:checked + .fieldset-toggle-label .fieldset-toggle-icon {
+  transform: rotate(180deg);
+}
+
+.fieldset-toggle:checked + .fieldset-toggle-label + .fieldset-content {
+  max-height: 1000px;
+  padding: 20px;
+}
+
+/* Ensure only one fieldset can be open at a time */
+.fieldset-toggle:checked + .fieldset-toggle-label {
+  background: rgb(0, 0, 0); 
+}
+
+.fieldset-toggle:checked + .fieldset-toggle-label legend {
+  color: rgb(255, 255, 255); 
+}
+
+/* Focus styles for accessibility */
+.fieldset-toggle:focus + .fieldset-toggle-label {
+  outline: 2px solid rgb(0, 0, 0); 
+  outline-offset: 2px;
 }
 
 legend {
@@ -616,6 +704,29 @@ legend {
   font-weight: 500;
   margin-bottom: 0.5rem;
   color: #495057;
+}
+
+/* Two-column form layout */
+.form-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.form-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-column .form-group {
+  margin-bottom: 1.5rem;
+}
+
+/* Ensure textarea in two-column layout takes full height */
+.form-column textarea {
+  min-height: 120px;
+  resize: vertical;
 }
 
 .form-actions {
@@ -787,6 +898,16 @@ legend {
   .search-content {
     padding-top: 0.5rem;
   }
+
+  /* Two-column form layout mobile adjustments */
+  .form-columns {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .form-column textarea {
+    min-height: 100px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -804,6 +925,11 @@ legend {
 
   .main-message {
     font-size: 1.25rem;
+  }
+
+  /* Form column mobile adjustments for small screens */
+  .form-columns {
+    gap: 0.5rem;
   }
 }
 
