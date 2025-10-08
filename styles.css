@@ -517,7 +517,7 @@ a:focus {
 .main-message {
   font-size: 2rem;
   font-weight: 600;
-  color: #da4b13;
+  color: rgb(0, 0, 0);
   margin: 0;
   line-height: 1.3;
 }
