@@ -46,9 +46,19 @@
       </div>
 
       <div class="search-section">
-        <label for="ncr-search" class="search-label">Search NCR by Number:</label>
-        <input type="search" id="ncr-search" name="ncr-search" placeholder="Enter NCR number (e.g., 2025-001)" aria-describedby="search-help">
-        <p id="search-help" class="search-help">Search for existing NCR records by their unique number</p>
+        <!-- Collapsible search toggle -->
+        <input type="checkbox" id="search-toggle" class="search-toggle" aria-label="Toggle search section">
+        <label for="search-toggle" class="search-toggle-label">
+          <span class="search-toggle-text">Search NCR by Number</span>
+          <span class="search-toggle-icon" aria-hidden="true">▼</span>
+        </label>
+        
+        <!-- Collapsible search content -->
+        <div class="search-content">
+          <label for="ncr-search" class="search-label sr-only">Search NCR by Number:</label>
+          <input type="search" id="ncr-search" name="ncr-search" placeholder="Enter NCR number (e.g., 2025-001)" aria-describedby="search-help">
+          <p id="search-help" class="search-help">Search for existing NCR records by their unique number</p>
+        </div>
       </div>
     </section>
 

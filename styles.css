@@ -241,6 +241,61 @@ h2 {
   border-radius: 8px;
 }
 
+/* Collapsible search styles */
+.search-toggle {
+  display: none;
+}
+
+.search-toggle-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 500;
+  color: rgb(0, 0, 0); 
+  cursor: pointer;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #dee2e6;
+  margin-bottom: 1rem;
+  transition: color 0.3s ease;
+}
+
+.search-toggle-label:hover,
+.search-toggle-label:focus {
+  color: rgb(80, 80, 80);
+}
+
+.search-toggle:focus + .search-toggle-label {
+  outline: 2px solid rgb(80, 80, 80);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.search-toggle-text {
+  font-size: 1.1rem;
+}
+
+.search-toggle-icon {
+  font-size: 0.875rem;
+  transition: transform 0.3s ease;
+  color: #6c757d;
+}
+
+.search-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+}
+
+.search-toggle:checked + .search-toggle-label + .search-content {
+  max-height: 200px;
+  opacity: 1;
+}
+
+.search-toggle:checked + .search-toggle-label .search-toggle-icon {
+  transform: rotate(180deg);
+}
+
 .search-label {
   display: block;
   font-weight: 500;
@@ -701,9 +756,12 @@ legend {
     gap: 1rem;
   }
 
-  .create-section,
-  .search-section {
+  .create-section {
     padding: 1rem;
+  }
+
+  .search-section {
+    padding: 0.3rem; 
   }
 
   .about-message {
@@ -718,6 +776,16 @@ legend {
   .about-logo {
     height: 80px;
     margin-bottom: 1.5rem;
+  }
+
+  /* Collapsible search mobile adjustments */
+  .search-toggle-label {
+    font-size: 1rem;
+    padding: 1rem 0;
+  }
+
+  .search-content {
+    padding-top: 0.5rem;
   }
 }
 
