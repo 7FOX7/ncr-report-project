@@ -743,6 +743,15 @@ legend {
   font-size: 0.875rem;
 }
 
+footer {
+  background-color: rgb(0, 0, 0);
+  color: rgb(255, 255, 255); 
+  text-align: center;
+  font-size: 0.9rem;
+  margin-top: 50px; 
+  padding: 0; 
+}
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .header-container {
@@ -932,4 +941,3 @@ legend {
     gap: 0.5rem;
   }
 }
-
