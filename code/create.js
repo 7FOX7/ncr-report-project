@@ -48,6 +48,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  document.getElementById("btnReset").addEventListener("click", () => {
+    document.getElementById("ncr-form").reset();
+});
 
 
 
