@@ -80,6 +80,32 @@
             </tbody>
           </table>
         </div>
+        
+        <!-- Pagination -->
+        <nav aria-label="NCR Records Pagination" class="pagination-nav">
+          <div class="pagination-info">
+            <span class="pagination-text">Showing <strong>1-5</strong> of <strong>24</strong> NCRs</span>
+          </div>
+          
+          <div class="pagination-controls">
+            <button type="button" class="pagination-btn pagination-btn-prev" disabled aria-label="Go to previous page">
+              <span aria-hidden="true">‹</span>
+              <span class="pagination-btn-text">Previous</span>
+            </button>
+            
+            <div class="pagination-pages">
+              <button type="button" class="pagination-btn pagination-btn-page active" aria-label="Page 1" aria-current="page">1</button>
+              <button type="button" class="pagination-btn pagination-btn-page" aria-label="Page 2">2</button>
+              <span class="pagination-ellipsis" aria-hidden="true">…</span>
+              <button type="button" class="pagination-btn pagination-btn-page" aria-label="Page 5">5</button>
+            </div>
+            
+            <button type="button" class="pagination-btn pagination-btn-next" aria-label="Go to next page">
+              <span class="pagination-btn-text">Next</span>
+              <span aria-hidden="true">›</span>
+            </button>
+          </div>
+        </nav>
       </section>
       <!-- Archive modal -->
       <div id="archive-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="archive-modal-title" aria-describedby="archive-modal-description">

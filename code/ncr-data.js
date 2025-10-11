@@ -2,54 +2,40 @@
 
 const ncrData = [
     {
-        id: 1,
-        ncrNumber: "2025-611",
-        dateCreated: "2025-10-01",
-        lastModified: "2025-10-05",
-        supplier: "BlueHaven Distributors"
+      id: 1,
+      ncrNumber: "2025-611",
+      dateCreated: "2025-10-01",
+      lastModified: "2025-10-05",
+      supplier: "BlueHaven Distributors"
     },
     {
-        id: 2,
-        ncrNumber: "2025-325",
-        dateCreated: "2025-10-02",
-        lastModified: "2025-10-06",
-        supplier: "Apex Global Trading"
+      id: 2,
+      ncrNumber: "2025-325",
+      dateCreated: "2025-10-02",
+      lastModified: "2025-10-06",
+      supplier: "Apex Global Trading"
     },
     {
-        id: 3,
-        ncrNumber: "2025-424",
-        dateCreated: "2025-10-03",
-        lastModified: "2025-10-07",
-        supplier: "BlueHaven Distributors"
+      id: 3,
+      ncrNumber: "2025-424",
+      dateCreated: "2025-10-03",
+      lastModified: "2025-10-07",
+      supplier: "BlueHaven Distributors"
     },
     {
-        id: 4,
-        ncrNumber: "2025-777",
-        dateCreated: "2025-10-04",
-        lastModified: "2025-10-04",
-        supplier: "SilverOak Importers"
-    },
+      id: 4,
+      ncrNumber: "2025-777",
+      dateCreated: "2025-10-04",
+      lastModified: "2025-10-04",
+      supplier: "SilverOak Importers"
+    }, 
     {
-        id: 5,
-        ncrNumber: "2025-919",
-        dateCreated: "2025-10-05",
-        lastModified: "2025-10-07",
-        supplier: "Apex Global Trading"
+      id: 5,
+      ncrNumber: "2025-438",
+      dateCreated: "2025-10-04",
+      lastModified: "2025-10-06",
+      supplier: "BlueHaven Distributors"
     },
-    {
-        id: 6,
-        ncrNumber: "2025-156",
-        dateCreated: "2025-10-06",
-        lastModified: "2025-10-08",
-        supplier: "TechFlow Solutions"
-    },
-    {
-        id: 7,
-        ncrNumber: "2025-890",
-        dateCreated: "2025-10-07",
-        lastModified: "2025-10-09",
-        supplier: "GreenField Supplies"
-    }
 ];
 
 // Initialize the table when the page loads
