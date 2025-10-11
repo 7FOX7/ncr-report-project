@@ -17,6 +17,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const defectDescription = document.getElementById("defect-desc").value.trim();
       const inspectorID       = document.getElementById("inspected-by").value.trim();
       const dateInspected     = document.getElementById("inspected-on").value;
+      const createdOn = document.getElementById("created-on")
+
+      // set the date for today
+      createdOn.value = new Date().getDate()
 
       // --- required text fields ---
       if (purchaseOrder === "") { alert("Enter Purchase Order number."); document.getElementById("po-number").focus(); return; }
