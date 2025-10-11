@@ -81,7 +81,38 @@
           </table>
         </div>
       </section>
+      <!-- Archive modal -->
+      <div id="archive-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="archive-modal-title" aria-describedby="archive-modal-description">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 id="archive-modal-title">Confirm Archive</h3>
+          </div>
+          <div class="modal-body">
+            <p id="archive-modal-description">Are you sure you want to archive NCR <strong id="archive-ncr-number"></strong>?</p>
+            <p class="modal-warning">You can restore the NCR from the archive within 90 days of deletion.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="cancel-archive" class="btn btn-secondary">Cancel</button>
+            <button type="button" id="confirm-archive" class="btn btn-danger">Archive</button>
+          </div>
+        </div>
+      </div>
 
+      <!-- PDF modal -->
+      <div id="pdf-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="pdf-modal-title" aria-describedby="pdf-modal-description">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 id="pdf-modal-title">PDF Downloaded</h3>
+          </div>
+          <div class="modal-body">
+            <p id="pdf-modal-description">NCR <strong id="pdf-ncr-number"></strong> has been downloaded successfully!</p>
+            <p class="modal-info">Check your downloads folder for the PDF file.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="close-pdf-modal" class="btn btn-primary">Close</button>
+          </div>
+        </div>
+      </div>
       <!-- TODO: add pagination -->
     </main>
     <footer role="contentinfo" class="footer">
