@@ -1087,12 +1087,6 @@ footer {
   font-weight: 500;
 }
 
-.pagination-ellipsis {
-  color: #6c757d;
-  padding: 0 0.5rem;
-  font-weight: 500;
-}
-
 /* Pagination responsive design */
 @media (max-width: 768px) {
   .pagination-nav {
