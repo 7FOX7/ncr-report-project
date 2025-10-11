@@ -1,149 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Home - NCR Management System</title>
-  <link rel="stylesheet" href="../styles.css">
-</head>
-<body>
-  <header role="banner">
-    <div class="header-container">
-      <img src="../assets/logo.png" alt="NCR Management System Logo" class="logo" draggable="false">
-      
-      <!-- Hamburger menu toggle (hidden checkbox) -->
-      <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation menu">
-      <label for="nav-toggle" class="nav-toggle-label">
-        <span class="hamburger"></span>
-      </label>
-      
-      <nav role="navigation" aria-label="Main navigation" class="nav">
-        <ul>
-          <li><a href="index.html" aria-current="page">Home</a></li>
-          <li><a href="about.html">About</a></li>
-        </ul>
-      </nav>
-    </div>
-  </header>
-
-  <nav aria-label="Breadcrumb" class="breadcrumb">
-    <ol>
-      <li><span aria-current="page">Home</span></li>
-    </ol>
-  </nav>
-
-  <main role="main">
-    <h1>Non-Conformance Report Management</h1>
-
-    <section class="actions-section" aria-labelledby="actions-heading">
-      <h2 id="actions-heading" class="sr-only">NCR Actions</h2>
-      
-      <div class="create-section">
-        <a href="create.html" class="btn btn-primary" role="button" aria-describedby="create-description">
-          Create New NCR
-        </a>
-        <p id="create-description" class="action-description">Start a new Non-Conformance Report</p>
-      </div>
-
-      <div class="search-section">
-        <!-- Collapsible search toggle -->
-        <input type="checkbox" id="search-toggle" class="search-toggle" aria-label="Toggle search section">
-        <label for="search-toggle" class="search-toggle-label">
-          <span class="search-toggle-text">Search NCR by Supplier</span>
-          <span class="search-toggle-icon" aria-hidden="true">▼</span>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - NCR Management System</title>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <header role="banner">
+      <div class="header-container">
+        <img src="../assets/logo.png" alt="NCR Management System Logo" class="logo" draggable="false">
+        
+        <!-- Hamburger menu toggle (hidden checkbox) -->
+        <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation menu">
+        <label for="nav-toggle" class="nav-toggle-label">
+          <span class="hamburger"></span>
         </label>
         
-        <!-- Collapsible search content -->
-        <div class="search-content">
-          <label for="ncr-search" class="search-label sr-only">Search NCR by Supplier:</label>
-          <input type="search" id="ncr-search" name="ncr-search" placeholder="Enter NCR supplier (e.g., NorthPoint Co.)" aria-describedby="search-help">
-          <p id="search-help" class="search-help">Search for existing NCR records by supplier name</p>
+        <nav role="navigation" aria-label="Main navigation" class="nav">
+          <ul>
+            <li><a href="index.html" aria-current="page">Home</a></li>
+            <li><a href="about.html">About</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <nav aria-label="Breadcrumb" class="breadcrumb">
+      <ol>
+        <li><span aria-current="page">Home</span></li>
+      </ol>
+    </nav>
+
+    <main role="main">
+      <h1>Non-Conformance Report Management</h1>
+
+      <section class="actions-section" aria-labelledby="actions-heading">
+        <h2 id="actions-heading" class="sr-only">NCR Actions</h2>
+        
+        <div class="create-section">
+          <a href="create.html" class="btn btn-primary" role="button" aria-describedby="create-description">
+            Create New NCR
+          </a>
+          <p id="create-description" class="action-description">Start a new Non-Conformance Report</p>
         </div>
-      </div>
-    </section>
 
-    <section class="ncr-list-section" aria-labelledby="ncr-list-heading">
-      <h2 id="ncr-list-heading">NCR Records</h2>
-      
-      <div class="table-container">
-        <table class="ncr-table" role="table" aria-label="Non-Conformance Reports">
-          <thead>
-            <tr>
-              <th scope="col">NCR Number</th>
-              <th scope="col">Date Created</th>
-              <th scope="col">Last Modified</th>
-              <th scope="col">Supplier</th>
-              <th scope="col">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td data-label="NCR Number">2025-611</td>
-              <td data-label="Date Created">2025-10-01</td>
-              <td data-label="Last Modified">2025-10-05</td>
-              <td data-label="Supplier">BlueHaven Distributors</td>
-              <td data-label="Actions">
-                <button type="button" class="btn btn-secondary" aria-label="Edit 2025-611">Edit</button>
-                <button type="button" class="btn btn-danger" aria-label="Delete 2025-611">Archive</button>
-                <button class="btn btn-outline" aria-label="Download 2025-611 as PDF">PDF</button>
-              </td>
-            </tr>
-            <tr>
-              <td data-label="NCR Number">2025-325</td>
-              <td data-label="Date Created">2025-10-02</td>
-              <td data-label="Last Modified">2025-10-06</td>
-              <td data-label="Supplier">Apex Global Trading</td>
-              <td data-label="Actions">
-                <button class="btn btn-secondary" aria-label="Edit 2025-325">Edit</button>
-                <button type="button" class="btn btn-danger" aria-label="Delete 2025-325">Archive</button>
-                <button class="btn btn-outline" aria-label="Download 2025-325 as PDF">PDF</button>
-              </td>
-            </tr>
-            <tr>
-              <td data-label="NCR Number">2025-424</td>
-              <td data-label="Date Created">2025-10-03</td>
-              <td data-label="Last Modified">2025-10-07</td>
-              <td data-label="Supplier">BlueHaven Distributors</td>
-              <td data-label="Actions">
-                <button class="btn btn-secondary" aria-label="Edit 2025-424">Edit</button>
-                <button type="button" class="btn btn-danger" aria-label="Delete 2025-424">Archive</button>
-                <button class="btn btn-outline" aria-label="Download 2025-424 as PDF">PDF</button>
-              </td>
-            </tr>
-            <tr>
-              <td data-label="NCR Number">2025-777</td>
-              <td data-label="Date Created">2025-10-04</td>
-              <td data-label="Last Modified">2025-10-04</td>
-              <td data-label="Supplier">SilverOak Importers</td>
-              <td data-label="Actions">
-                <button class="btn btn-secondary" aria-label="Edit 2025-777">Edit</button>
-                <button type="button" class="btn btn-danger" aria-label="Delete 2025-777">Archive</button>
-                <button class="btn btn-outline" aria-label="Download 2025-777 as PDF">PDF</button>
-              </td>
-            </tr>
-            <tr>
-              <td data-label="NCR Number">2025-919</td>
-              <td data-label="Date Created">2025-10-05</td>
-              <td data-label="Last Modified">2025-10-07</td>
-              <td data-label="Supplier">Apex Global Trading</td>
-              <td data-label="Actions">
-                <button class="btn btn-secondary" aria-label="Edit 2025-919">Edit</button>
-                <button type="button" class="btn btn-danger" aria-label="Delete 2025-919">Archive</button>
-                <button class="btn btn-outline" aria-label="Download 2025-919 as PDF">PDF</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+        <div class="search-section">
+          <!-- Collapsible search toggle -->
+          <input type="checkbox" id="search-toggle" class="search-toggle" aria-label="Toggle search section">
+          <label for="search-toggle" class="search-toggle-label">
+            <span class="search-toggle-text">Search NCR by Supplier</span>
+            <span class="search-toggle-icon" aria-hidden="true">▼</span>
+          </label>
+          
+          <!-- Collapsible search content -->
+          <div class="search-content">
+            <label for="ncr-search" class="search-label sr-only">Search NCR by Supplier:</label>
+            <input type="search" id="ncr-search" name="ncr-search" placeholder="Enter NCR supplier (e.g., NorthPoint Co.)" aria-describedby="search-help">
+            <p id="search-help" class="search-help">Search for existing NCR records by supplier name</p>
+          </div>
+        </div>
+      </section>
 
-    <!-- TODO: add pagination -->
-  </main>
-  <footer role="contentinfo" class="footer">
-    <div>
-      <p>&copy; 2025 NCR Management System. All rights reserved.</p>
-    </div>
-  </div>
-</footer>
-</body>
+      <section class="ncr-list-section" aria-labelledby="ncr-list-heading">
+        <h2 id="ncr-list-heading">NCR Records</h2>
+        
+        <div class="table-container">
+          <table class="ncr-table" role="table" aria-label="Non-Conformance Reports">
+            <thead>
+              <tr>
+                <th scope="col">NCR Number</th>
+                <th scope="col">Date Created</th>
+                <th scope="col">Last Modified</th>
+                <th scope="col">Supplier</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TODO: add pagination -->
+    </main>
+    <footer role="contentinfo" class="footer">
+      <div>
+        <p>&copy; 2025 NCR Management System. All rights reserved.</p>
+      </div>
+    </footer>
+    <script src="../code/ncr-data.js"></script>
+  </body>
 </html>
