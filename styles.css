@@ -1,3 +1,4 @@
+
 /* Reset and base styles */
 * {
   box-sizing: border-box;
@@ -303,11 +304,44 @@ h2 {
   color: #495057;
 }
 
-.search-help {
+.search-help, .status-help, .records-help {
   font-size: 0.875rem;
   color: #6c757d;
   margin-top: 0.5rem;
   margin-bottom: 0;
+}
+
+.search-columns {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.search-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: start;
+}
+
+.search-row.end-align {
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  gap: 1rem;
+}
+
+.search-row.end-align label,
+.search-row.end-align input[type="radio"] {
+  margin: 0;
+  vertical-align: middle;
+}
+
+.records-per-page-select {
+  width: 5ch;
+  min-width: 5ch;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
 }
 
 .action-description {

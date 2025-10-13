@@ -1,3 +1,27 @@
+// Render pagination controls dynamically based on total items and items per page
+function renderPaginationControls(totalItems, itemsPerPage, currentPage = 1) {
+    const paginationControls = document.querySelector('.pagination-controls');
+    const paginationPagesContainer = document.querySelector('.pagination-pages');
+    if (!paginationPagesContainer || !paginationControls) return;
+    // Clear existing page buttons
+    paginationPagesContainer.innerHTML = '';
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    if (totalPages <= 1) {
+        paginationControls.style.display = 'none';
+        return;
+    } else {
+        paginationControls.style.display = '';
+    }
+    for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'pagination-btn pagination-btn-page' + (i === currentPage ? ' active' : '');
+        btn.setAttribute('aria-label', `Page ${i}`);
+        if (i === currentPage) btn.setAttribute('aria-current', 'page');
+        btn.textContent = i;
+        paginationPagesContainer.appendChild(btn);
+    }
+}
 // Pagination functionality for NCR Management System
 // This handles visual pagination state changes without actual data pagination logic
 
@@ -58,6 +82,7 @@ function getMaxPage() {
     return maxPage;
 }
 
+// Modified to call filterNCRData with the selected page
 function selectPage(pageNumber) {
     // Remove active class from all page buttons
     const allPageButtons = document.querySelectorAll('.pagination-btn-page');
@@ -65,23 +90,20 @@ function selectPage(pageNumber) {
         button.classList.remove('active');
         button.removeAttribute('aria-current');
     });
-    
     // Find and activate the selected page button
     const targetButton = Array.from(allPageButtons).find(button => 
         parseInt(button.textContent) === pageNumber
     );
-    
     if (targetButton) {
         targetButton.classList.add('active');
         targetButton.setAttribute('aria-current', 'page');
     }
-    
     // Update prev/next button states
     updatePrevNextButtons(pageNumber);
-    
-    // Update pagination info text
-    updatePaginationInfo(pageNumber);
-    
+    // Update table and pagination info for the selected page
+    if (typeof filterNCRData === 'function') {
+        filterNCRData(pageNumber);
+    }
     console.log(`Page ${pageNumber} selected`);
 }
 
@@ -113,12 +135,12 @@ function updatePrevNextButtons(currentPage) {
     }
 }
 
-function updatePaginationInfo(currentPage) {
+function updatePaginationInfo(currentPage, dataSet) {
     const paginationText = document.querySelector('.pagination-text');
     if (paginationText) {
         // Calculate items shown based on page (4 items per page)
-        const itemsPerPage = 4;
-        const totalItems = 7; // Based on the 7 NCRs in the data
+        const itemsPerPage = 5;
+        const totalItems = dataSet.length;
         
         const startItem = (currentPage - 1) * itemsPerPage + 1;
         const endItem = Math.min(currentPage * itemsPerPage, totalItems);

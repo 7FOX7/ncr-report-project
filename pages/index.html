@@ -47,17 +47,52 @@
 
         <div class="search-section">
           <!-- Collapsible search toggle -->
+          
           <input type="checkbox" id="search-toggle" class="search-toggle" aria-label="Toggle search section">
           <label for="search-toggle" class="search-toggle-label">
-            <span class="search-toggle-text">Search NCR by Supplier</span>
+            <span class="search-toggle-text">Search Filters</span>
             <span class="search-toggle-icon" aria-hidden="true">▼</span>
           </label>
-          
-          <!-- Collapsible search content -->
+            
+            <!-- Collapsible search content -->
           <div class="search-content">
-            <label for="ncr-search" class="search-label sr-only">Search NCR by Supplier:</label>
-            <input type="search" id="ncr-search" name="ncr-search" placeholder="Enter NCR supplier (e.g., NorthPoint Co.)" aria-describedby="search-help">
-            <p id="search-help" class="search-help">Search for existing NCR records by supplier name</p>
+
+            <div class="search-columns">
+              <div class="form-column">
+                <label for="ncr-search" class="search-label sr-only">Search NCR by Supplier:</label>
+                <input type="search" id="ncr-search" name="ncr-search" placeholder="Enter NCR supplier (e.g., NorthPoint Co.)" aria-describedby="search-help">
+                <p id="search-help" class="search-help">Search for existing NCR records by supplier name</p>
+              </div>
+              
+              <div class="form-column">
+                <div class="search-row end-align">
+                  <input type="radio" id="search-active" name="ncr-active" value="active" checked="checked" aria-describedby="status-help" tabindex="0">
+                  <label for="search-active" class="search-label">Active records</label>
+                </div>
+
+                <div class="search-row end-align">
+                  <input type="radio" id="search-archived" name="ncr-active" value="archived" aria-describedby="status-help" tabindex="0">
+                  <label for="search-archived" class="search-label">Archived records</label>
+                </div>
+                <p id="status-help" class="status-help">View active or archived NCR records</p>
+              </div>
+
+              <div class="form-column">
+                <div class="search-row end-align">
+                  <label for="search-amount">Records per page:</label>
+                  <select name="search-amount" id="search-amount" class="records-per-page-select" aria-describedby="records-help">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                  </select>
+                </div>
+                <p id="records-help" class="records-help">Amount of records displayed per page</p>
+              </div>
+            </div> 
+
+            <div style="display: flex; justify-content: center;">
+              <button type="button" id="btnFilter" class="btn btn-primary">Apply Filters</button>
+            </div>
           </div>
         </div>
       </section>
@@ -84,7 +119,7 @@
         <!-- Pagination -->
         <nav aria-label="NCR Records Pagination" class="pagination-nav">
           <div class="pagination-info">
-            <span class="pagination-text">Showing <strong>1-5</strong> of <strong>24</strong> NCRs</span>
+            <span id="pagination-text" class="pagination-text">Showing <strong>1-5</strong> of <strong>7</strong> NCRs</span>
           </div>
           
           <div class="pagination-controls">
