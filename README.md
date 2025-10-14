@@ -13,7 +13,7 @@
 # Design
 
 + [X] provide guidance, labels, and instructions on every input or interactive area
-+ [ ] include “Are you sure?” confirmations, undo actions, and success/failure messages
++ [X] include “Are you sure?” confirmations, undo actions, and success/failure messages
 + [X] be consistent: button labels, colors, icons, and help placement should match across all pages
 
 # Perceivability
@@ -41,7 +41,7 @@
 
 + [X] when a user enters data:
   + [X] errors are detected and described in text near the field
-  + [ ] suggestions are provided when possible (e.g., “Did you mean...?”)
+  + [X] suggestions are provided when possible (e.g., “Did you mean...?”)
   + [X] before submitting critical info (legal, payment, etc.), user can:
     + [X] review & confirm, or Undo submission
 + [X] autofill should be available.
@@ -50,7 +50,7 @@
 # Robustness
 
 + [X] use valid HTML (closing tags, semantics etc.)
-+ [ ] use ARIA ``roles`` and ``labels`` when needed:
-  + [ ] ``role="status"`` for dynamic updates (e.g., “5 results found” after search)
++ [X] use ARIA ``roles`` and ``labels`` when needed:
+  + [X] ``role="status"`` for dynamic updates (e.g., “5 results found” after search)
   + [X] ``aria-label`` for custom buttons and icons
-+ [ ] test with a screen reader (like NVDA or VoiceOver)
++ [X] test with a screen reader (like NVDA or VoiceOver)
