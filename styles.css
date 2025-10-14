@@ -27,30 +27,36 @@ body {
   border: 0;
 }
 
-/* Header styles */
+/* Header bar */
 header {
-  background: rgb(0, 0, 0);  
-  color: rgb(255, 255, 255);
-  padding: 1rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: #000;
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,.1);
+  overflow: visible;                 
 }
 
 .header-container {
+  height: 64px;                      
+  padding: 0 28px;                   
   display: flex;
   align-items: center;
   justify-content: space-between;
   max-width: 1200px;
   margin: 0 auto;
-  flex-wrap: wrap;
   gap: 1rem;
 }
 
-.logo {
-  height: 60px;
-  width: auto;
-  max-width: 150px;
-}
 
+.logo {
+  height: 100%;                      
+  width: 150px;                       
+  display: block;
+  object-fit: contain;
+
+  transform: scale(1.35);            
+  transform-origin: left center;     
+  margin-left: 4px;                  
+}
 /* Navigation styles */
 nav ul {
   list-style: none;
