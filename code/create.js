@@ -41,18 +41,18 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault(); // stop real submit while we validate
 
       // read values at click time 
-      const purchaseOrder     = document.getElementById("po-number")?.value.trim() || "";
-      const salesOrder        = document.getElementById("so-number")?.value.trim() || "";  page; harml
+      const purchaseOrder     = (document.getElementById("po-number")?.value || "").trim();
+      const salesOrder        = (document.getElementById("so-number")?.value || "").trim();
       const supplierSelect    = document.getElementById("supplier-id");
       const supplierChoice    = supplierSelect?.value || "";
-      const supplierText      = supplierSelect?.options[supplierSelect.selectedIndex]?.text?.trim() || supplierChoice;
+      const supplierText      = supplierSelect ? (supplierSelect.options[supplierSelect.selectedIndex]?.text?.trim() || supplierChoice) : supplierChoice;
       const processType       = document.getElementById("process-type-id")?.value || ""; 
       const product           = document.getElementById("product-id")?.value || "";
-      const recvdQtyStr       = document.getElementById("recv-qty")?.value.trim() || "";
-      const defectQtyStr      = document.getElementById("defect-qty")?.value.trim() || "";
+      const recvdQtyStr       = (document.getElementById("recv-qty")?.value || "").trim();
+      const defectQtyStr      = (document.getElementById("defect-qty")?.value || "").trim();
       const issueCategory     = document.getElementById("issue-cat-id")?.value || "";
-      const defectDescription = document.getElementById("defect-desc")?.value.trim() || "";
-      const inspectorID       = document.getElementById("inspected-by")?.value.trim() || "";
+      const defectDescription = (document.getElementById("defect-desc")?.value || "").trim();
+      const inspectorID       = (document.getElementById("inspected-by")?.value || "").trim();
       const dateInspectedVal  = document.getElementById("inspected-on")?.value || "";
       const statusVal         = document.getElementById("ncr-status")?.value || "Open";
 
