@@ -1177,3 +1177,46 @@ footer {
     gap: 0.5rem;
   }
 }
+
+/* Form Validation Styles */
+.form-group.invalid input,
+.form-group.invalid select,
+.form-group.invalid textarea {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+  background-color: #fff5f5;
+}
+
+.form-group.invalid input:focus,
+.form-group.invalid select:focus,
+.form-group.invalid textarea:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+  outline: none;
+}
+
+.form-group .error-message {
+  display: none;
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+.form-group.invalid .error-message {
+  display: block;
+}
+
+/* Animation for validation state changes */
+.form-group input,
+.form-group select,
+.form-group textarea {
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, background-color 0.15s ease-in-out;
+}
+
+/* Remove validation styling when user starts typing */
+.form-group.invalid input:focus,
+.form-group.invalid select:focus,
+.form-group.invalid textarea:focus {
+  animation: validation-clear 0.3s ease-in-out;
+}

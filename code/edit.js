@@ -10,6 +10,83 @@ function saveJSON(key, value) { localStorage.setItem(key, JSON.stringify(value))
 function notChosen(v) { return v === "" || v === "0" || (typeof v === "string" && v.toLowerCase() === "select"); }
 function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
 
+// Validation helper functions
+function clearValidation(elementId) {
+  const element = document.getElementById(elementId);
+  if (element) {
+    const formGroup = element.closest('.form-group');
+    if (formGroup) {
+      formGroup.classList.remove('invalid');
+      const errorMessage = formGroup.querySelector('.error-message');
+      if (errorMessage) {
+        errorMessage.remove();
+      }
+    }
+  }
+}
+
+function showValidationError(elementId, message) {
+  const element = document.getElementById(elementId);
+  if (element) {
+    // Check if the field is in a collapsed accordion section
+    const fieldsetContent = element.closest('.fieldset-content');
+    const isFieldVisible = fieldsetContent && window.getComputedStyle(fieldsetContent).maxHeight !== '0px';
+    
+    if (!isFieldVisible) {
+      // Field is in a collapsed accordion - show alert and open the accordion
+      alert("Please check all form sections. There are required fields in other sections that need to be completed.");
+      
+      // Find and open the accordion containing this field
+      const fieldset = element.closest('.collapsible-fieldset');
+      if (fieldset) {
+        const toggleInput = fieldset.querySelector('.fieldset-toggle');
+        if (toggleInput) {
+          toggleInput.checked = true;
+        }
+      }
+    }
+    
+    const formGroup = element.closest('.form-group');
+    if (formGroup) {
+      formGroup.classList.add('invalid');
+      
+      // Remove existing error message
+      const existingError = formGroup.querySelector('.error-message');
+      if (existingError) {
+        existingError.remove();
+      }
+      
+      // Add new error message
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error-message';
+      errorDiv.textContent = message;
+      formGroup.appendChild(errorDiv);
+      
+      // Clear validation when user interacts with the field
+      const clearValidationHandler = () => {
+        clearValidation(elementId);
+        element.removeEventListener('input', clearValidationHandler);
+        element.removeEventListener('change', clearValidationHandler);
+      };
+      
+      element.addEventListener('input', clearValidationHandler);
+      element.addEventListener('change', clearValidationHandler);
+    }
+    element.focus();
+  }
+}
+
+function clearAllValidation() {
+  const invalidGroups = document.querySelectorAll('.form-group.invalid');
+  invalidGroups.forEach(group => {
+    group.classList.remove('invalid');
+    const errorMessage = group.querySelector('.error-message');
+    if (errorMessage) {
+      errorMessage.remove();
+    }
+  });
+}
+
 //state from URL 
 const params = new URLSearchParams(window.location.search);
 const ncrNumberParam = params.get("ncr") || "";
@@ -160,25 +237,61 @@ function onUpdateSubmit(e, stayHere = false) {
   const statusVal    = selStatus?.value || "Open";
   const poNumber     = (inpPONum?.value || "").trim();
 
-  //validations 
-  if (poNumber === "")        { alert("Enter Purchase Order number.");  inpPONum?.focus(); return; }
-  if (inspectedBy === "")     { alert("Enter Inspector ID/Name.");      inpInspector?.focus(); return; }
-  if (defectDesc === "")      { alert("Describe the defect.");          inpDefectDesc?.focus(); return; }
-  if (notChosen(supplierVal)) { alert("Choose a supplier.");            selSupplier?.focus(); return; }
-  if (notChosen(productVal))  { alert("Choose a product.");             selProduct?.focus(); return; }
-  if (notChosen(issueCatVal)) { alert("Choose an issue category.");     selIssue?.focus(); return; }
+  // Clear any previous validation errors
+  clearAllValidation();
+
+  //validations with visual feedback
+  if (poNumber === "") { 
+    showValidationError("purchase-order", "Purchase Order number is required."); 
+    return; 
+  }
+  if (inspectedBy === "") { 
+    showValidationError("inspected-by", "Inspector ID/Name is required."); 
+    return; 
+  }
+  if (defectDesc === "") { 
+    showValidationError("defect-desc", "Defect description is required."); 
+    return; 
+  }
+  if (notChosen(supplierVal)) { 
+    showValidationError("supplier-id", "Please choose a supplier."); 
+    return; 
+  }
+  if (notChosen(productVal)) { 
+    showValidationError("product-id", "Please choose a product."); 
+    return; 
+  }
+  if (notChosen(issueCatVal)) { 
+    showValidationError("issue-cat-id", "Please choose an issue category."); 
+    return; 
+  }
 
   const recvQty   = Number(recvQtyStr);
   const defectQty = Number(defectQtyStr);
-  if (!Number.isFinite(recvQty) || recvQty <= 0)   { alert("Enter received quantity (number > 0).");   inpRecvQty?.focus(); return; }
-  if (!Number.isFinite(defectQty) || defectQty < 0){ alert("Enter defective quantity (number ≥ 0).");  inpDefectQty?.focus(); return; }
+  if (!Number.isFinite(recvQty) || recvQty <= 0) { 
+    showValidationError("recv-qty", "Enter a valid received quantity (number > 0)."); 
+    return; 
+  }
+  if (!Number.isFinite(defectQty) || defectQty < 0) { 
+    showValidationError("defect-qty", "Enter a valid defective quantity (number ≥ 0)."); 
+    return; 
+  }
   //defective cannot exceed received
-  if (defectQty > recvQty) { alert("Defective quantity cannot be greater than received quantity."); inpDefectQty?.focus(); return; }
+  if (defectQty > recvQty) { 
+    showValidationError("defect-qty", "Defective quantity cannot be greater than received quantity."); 
+    return; 
+  }
 
-  if (!inspectedOn) { alert("Pick the inspection date."); inpInspectedOn?.focus(); return; }
+  if (!inspectedOn) { 
+    showValidationError("inspected-on", "Please select the inspection date."); 
+    return; 
+  }
   const picked = new Date(inspectedOn);
   const today  = new Date(); today.setHours(0,0,0,0);
-  if (picked > today) { alert("Inspection date cannot be in the future."); inpInspectedOn?.focus(); return; }
+  if (picked > today) { 
+    showValidationError("inspected-on", "Inspection date cannot be in the future."); 
+    return; 
+  }
 
   const lastModified = todayISO();
 

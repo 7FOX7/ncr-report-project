@@ -21,6 +21,83 @@ function saveJSON(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
+// Validation helper functions
+function clearValidation(elementId) {
+  const element = document.getElementById(elementId);
+  if (element) {
+    const formGroup = element.closest('.form-group');
+    if (formGroup) {
+      formGroup.classList.remove('invalid');
+      const errorMessage = formGroup.querySelector('.error-message');
+      if (errorMessage) {
+        errorMessage.remove();
+      }
+    }
+  }
+}
+
+function showValidationError(elementId, message) {
+  const element = document.getElementById(elementId);
+  if (element) {
+    // Check if the field is in a collapsed accordion section
+    const fieldsetContent = element.closest('.fieldset-content');
+    const isFieldVisible = fieldsetContent && window.getComputedStyle(fieldsetContent).maxHeight !== '0px';
+    
+    if (!isFieldVisible) {
+      // Field is in a collapsed accordion - show alert and open the accordion
+      alert("Please check all form sections. There are required fields in other sections that need to be completed.");
+      
+      // Find and open the accordion containing this field
+      const fieldset = element.closest('.collapsible-fieldset');
+      if (fieldset) {
+        const toggleInput = fieldset.querySelector('.fieldset-toggle');
+        if (toggleInput) {
+          toggleInput.checked = true;
+        }
+      }
+    }
+    
+    const formGroup = element.closest('.form-group');
+    if (formGroup) {
+      formGroup.classList.add('invalid');
+      
+      // Remove existing error message
+      const existingError = formGroup.querySelector('.error-message');
+      if (existingError) {
+        existingError.remove();
+      }
+      
+      // Add new error message
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error-message';
+      errorDiv.textContent = message;
+      formGroup.appendChild(errorDiv);
+      
+      // Clear validation when user interacts with the field
+      const clearValidationHandler = () => {
+        clearValidation(elementId);
+        element.removeEventListener('input', clearValidationHandler);
+        element.removeEventListener('change', clearValidationHandler);
+      };
+      
+      element.addEventListener('input', clearValidationHandler);
+      element.addEventListener('change', clearValidationHandler);
+    }
+    element.focus();
+  }
+}
+
+function clearAllValidation() {
+  const invalidGroups = document.querySelectorAll('.form-group.invalid');
+  invalidGroups.forEach(group => {
+    group.classList.remove('invalid');
+    const errorMessage = group.querySelector('.error-message');
+    if (errorMessage) {
+      errorMessage.remove();
+    }
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   // fill NCR number and lock it
   const ncrInput = document.getElementById("ncr-number");
@@ -59,38 +136,67 @@ document.addEventListener("DOMContentLoaded", () => {
       //created date shown on page
       const createdOnVal = createdOn?.value || todayISO();
 
-      // validations 
-      if (purchaseOrder === "") { alert("Enter Purchase Order number."); document.getElementById("po-number")?.focus(); return; }
-      if (inspectorID === "")   { alert("Enter Inspector ID/Name.");     document.getElementById("inspected-by")?.focus(); return; }
-      if (defectDescription === "") { alert("Describe the defect.");     document.getElementById("defect-desc")?.focus(); return; }
+      // Clear any previous validation errors
+      clearAllValidation();
+
+      // validations with visual feedback
+      if (purchaseOrder === "") { 
+        showValidationError("po-number", "Purchase Order number is required."); 
+        return; 
+      }
+      if (inspectorID === "") { 
+        showValidationError("inspected-by", "Inspector ID/Name is required."); 
+        return; 
+      }
+      if (defectDescription === "") { 
+        showValidationError("defect-desc", "Defect description is required."); 
+        return; 
+      }
 
       const notChosen = (v) => v === "" || v === "0" || (typeof v === "string" && v.toLowerCase() === "select");
-      if (notChosen(supplierChoice)) { alert("Choose a supplier.");       supplierSelect?.focus(); return; }
-      if (notChosen(product))        { alert("Choose a product.");        document.getElementById("product-id")?.focus(); return; }
-      if (notChosen(issueCategory))  { alert("Choose an issue category.");document.getElementById("issue-cat-id")?.focus(); return; }
+      if (notChosen(supplierChoice)) { 
+        showValidationError("supplier-id", "Please choose a supplier."); 
+        return; 
+      }
+      if (notChosen(product)) { 
+        showValidationError("product-id", "Please choose a product."); 
+        return; 
+      }
+      if (notChosen(issueCategory)) { 
+        showValidationError("issue-cat-id", "Please choose an issue category."); 
+        return; 
+      }
       
       if (document.getElementById("process-type-id") && notChosen(processType)) {
-        alert("Choose a process type."); document.getElementById("process-type-id")?.focus(); return;
+        showValidationError("process-type-id", "Please choose a process type."); 
+        return;
       }
 
       const recvdQty  = Number(recvdQtyStr);
       const defectQty = Number(defectQtyStr);
-      if (!Number.isFinite(recvdQty) || recvdQty <= 0) { alert("Enter received quantity (number > 0)."); document.getElementById("recv-qty")?.focus(); return; }
-      if (!Number.isFinite(defectQty) || defectQty < 0){ alert("Enter defective quantity (number ≥ 0)."); document.getElementById("defect-qty")?.focus(); return; }
+      if (!Number.isFinite(recvdQty) || recvdQty <= 0) { 
+        showValidationError("recv-qty", "Enter a valid received quantity (number > 0)."); 
+        return; 
+      }
+      if (!Number.isFinite(defectQty) || defectQty < 0) { 
+        showValidationError("defect-qty", "Enter a valid defective quantity (number ≥ 0)."); 
+        return; 
+      }
       //defective cannot exceed received
       if (defectQty > recvdQty) {
-        alert("Defective quantity cannot be greater than received quantity.");
-        document.getElementById("defect-qty")?.focus();
+        showValidationError("defect-qty", "Defective quantity cannot be greater than received quantity.");
         return;
       }
 
-      if (!dateInspectedVal) { alert("Pick the inspection date."); document.getElementById("inspected-on")?.focus(); return; }
+      if (!dateInspectedVal) { 
+        showValidationError("inspected-on", "Please select the inspection date."); 
+        return; 
+      }
       //parse as local date
       const picked = parseLocalDate(dateInspectedVal);
       const today  = new Date(); today.setHours(0,0,0,0);
       if (picked < today) {
-        alert("Inspection date cannot be earlier than today.");
-        document.getElementById("inspected-on")?.focus();
+        showValidationError("inspected-on", "Inspection date cannot be earlier than today.");
         return;
       }
 
