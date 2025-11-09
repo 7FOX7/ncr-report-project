@@ -425,6 +425,43 @@ a:focus {
   background-color: rgba(0, 123, 255, 0.1);
 }
 
+/* Checkbox group styles */
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: normal;
+  margin-bottom: 0;
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  margin-right: 0.75rem;
+  transform: scale(1.2);
+  cursor: pointer;
+}
+
+.checkbox-text {
+  color: #495057;
+  font-size: 1rem;
+}
+
+.checkbox-label:hover .checkbox-text {
+  color: #007bff;
+}
+
+.checkbox-label input[type="checkbox"]:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
 /* Button styles */
 .btn {
   display: inline-block;

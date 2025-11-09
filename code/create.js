@@ -21,6 +21,18 @@ function saveJSON(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
+// Helper function to get checkbox values
+function getCheckboxValues(name) {
+  const checkboxes = document.querySelectorAll(`input[name="${name}"]:checked`);
+  return Array.from(checkboxes).map(cb => cb.value);
+}
+
+// Helper function to get single checkbox value (for yes/no type fields)
+function getSingleCheckboxValue(name) {
+  const values = getCheckboxValues(name);
+  return values.length > 0 ? values[0] : "";
+}
+
 // Validation helper functions
 function clearValidation(elementId) {
   const element = document.getElementById(elementId);
@@ -146,6 +158,21 @@ document.addEventListener("DOMContentLoaded", () => {
   // Mark required fields with asterisks
   markRequiredFields();
   
+  // Add mutual exclusivity logic for item-nonconforming checkboxes
+  const itemNonconformingCheckboxes = document.querySelectorAll('input[name="item-nonconforming"]');
+  itemNonconformingCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      if (this.checked) {
+        // Uncheck other checkboxes in the same group
+        itemNonconformingCheckboxes.forEach(other => {
+          if (other !== this) {
+            other.checked = false;
+          }
+        });
+      }
+    });
+  });
+  
   // fill NCR number and lock it
   const ncrInput = document.getElementById("ncr-number");
   if (ncrInput) {
@@ -196,6 +223,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const defectDescription = (document.getElementById("defect-desc")?.value || "").trim();
       const inspectorID       = (document.getElementById("inspected-by")?.value || "").trim();
       const dateInspectedVal  = document.getElementById("inspected-on")?.value || "";
+      
+      // Read checkbox values
+      const itemNonconforming = getSingleCheckboxValue("item-nonconforming");
+      const processApplicable = getCheckboxValues("process-applicable");
       const statusVal         = document.getElementById("ncr-status")?.value || "Open";
 
       //created date shown on page
@@ -303,7 +334,9 @@ document.addEventListener("DOMContentLoaded", () => {
         inspectedBy:   inspectorID,
         inspectedOn:   dateInspectedVal,
         status:        statusVal,
-        isCompleted:   isCompleted
+        isCompleted:   isCompleted,
+        itemNonconforming: itemNonconforming,
+        processApplicable: processApplicable
       };
       saveJSON("ncrDetails", detailsMap);
 

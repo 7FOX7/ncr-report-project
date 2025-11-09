@@ -85,11 +85,16 @@
                     <label for="item-nonconforming">Item Marked Nonconforming</label>
                     <span class="tooltip" data-tooltip="Indicates whether the item has been marked as nonconforming" tabindex="0" aria-label="Help for Item Marked Nonconforming"></span>
                   </div>
-                  <select id="item-nonconforming" name="item-nonconforming" aria-describedby="item-nonconforming">
-                    <option value="">Select option</option>
-                    <option value="yes">Yes</option>
-                    <option value="no">No</option>
-                  </select>
+                  <div class="checkbox-group" role="group" aria-labelledby="item-nonconforming-label">
+                    <label class="checkbox-label">
+                      <input type="checkbox" name="item-nonconforming" value="yes" id="item-nonconforming-yes">
+                      <span class="checkbox-text">Yes</span>
+                    </label>
+                    <label class="checkbox-label">
+                      <input type="checkbox" name="item-nonconforming" value="no" id="item-nonconforming-no">
+                      <span class="checkbox-text">No</span>
+                    </label>
+                  </div>
                 </div>
               </div>
 
@@ -123,11 +128,16 @@
                     <label for="process-applicable">Process Applicable</label>
                     <span class="tooltip" data-tooltip="Identify which process is applicable to this non-conformance" tabindex="0" aria-label="Help for Process Applicable"></span>
                   </div>
-                  <select id="process-applicable" name="process-applicable" aria-describedby="process-applicable">
-                    <option value="">Select process</option>
-                    <option value="supplier-rec-insp">Supplier or Rec-Insp</option>
-                    <option value="wip-production">WIP (Production Order)</option>
-                  </select>
+                  <div class="checkbox-group" role="group" aria-labelledby="process-applicable-label">
+                    <label class="checkbox-label">
+                      <input type="checkbox" name="process-applicable" value="supplier-rec-insp" id="process-applicable-supplier">
+                      <span class="checkbox-text">Supplier or Rec-Insp</span>
+                    </label>
+                    <label class="checkbox-label">
+                      <input type="checkbox" name="process-applicable" value="wip-production" id="process-applicable-wip">
+                      <span class="checkbox-text">WIP (Production Order)</span>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
