@@ -615,6 +615,12 @@ a:focus {
   outline-offset: 2px;
 }
 
+/* Special handling for tooltips in accordion headers */
+.fieldset-toggle-label .tooltip::after {
+  z-index: 10000;
+  position: fixed; /* Use fixed positioning to escape any stacking contexts */
+}
+
 /* Form group with tooltip layout */
 .form-group-with-tooltip {
   display: flex;
@@ -1247,4 +1253,36 @@ footer {
 .required-fields-legend .required-asterisk {
   color: #dc3545;
   font-weight: bold;
+}
+
+/* Completion status alert */
+.completion-status {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Completed NCR styling in table */
+.ncr-completed {
+  background-color: #f8f9fa !important;
+  opacity: 0.8;
+}
+
+.ncr-completed td {
+  color: #6c757d;
+}
+
+.completion-badge {
+  background-color: rgb(0, 0, 0);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 0.5rem;
 }

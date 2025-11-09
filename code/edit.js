@@ -214,6 +214,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // fill the form from storage 
   fillFormFrom(details, row);
 
+  // Check if NCR is completed and disable editing if so
+  if (details && details.isCompleted) {
+    disableFormForCompletedNCR();
+  }
+
   // update 
   if (form) form.addEventListener("submit", onUpdateSubmit);
 
@@ -223,9 +228,9 @@ document.addEventListener("DOMContentLoaded", () => {
     btnComplete.setAttribute("type","button");
     btnComplete.addEventListener("click", (e) => {
       e.preventDefault();
-      const ans = window.prompt("Are you sure it is completed?\nType YES to continue, or leave blank to cancel.", "");
-      if (ans && ans.toUpperCase() === "YES") {
-        window.location.href = "index.html";
+      const confirmed = confirm("Are you sure you want to mark this NCR as completed?\n\nOnce completed, this form cannot be edited anymore.");
+      if (confirmed) {
+        markAsCompleted();
       }
     });
   }
@@ -259,9 +264,43 @@ function onResetClick(e) {
   
 }
 
+// Function to disable form editing for completed NCRs
+function disableFormForCompletedNCR() {
+  // Disable all form inputs
+  const formElements = form.querySelectorAll('input, select, textarea, button');
+  formElements.forEach(element => {
+    if (element.type !== 'radio') { // Don't disable accordion toggles
+      element.disabled = true;
+    }
+  });
+  
+  // Add completed status message at the top of the form
+  if (form && !form.querySelector('.completion-status')) {
+    const statusDiv = document.createElement('div');
+    statusDiv.className = 'completion-status alert alert-success';
+    statusDiv.innerHTML = '✓ This NCR has been marked as completed and cannot be edited.';
+    form.insertBefore(statusDiv, form.firstChild);
+  }
+  
+  // Change page title
+  const h1 = document.querySelector('h1');
+  if (h1) {
+    h1.textContent = 'View Non-Conformance Report (Completed)';
+  }
+}
+
 //Validate + Save 
 function onUpdateSubmit(e, stayHere = false) {
   e.preventDefault();
+  performUpdate(false, stayHere); // false = not completed
+}
+
+// Function to mark NCR as completed
+function markAsCompleted() {
+  performUpdate(true, false); // true = completed, false = don't stay
+}
+
+function performUpdate(isCompleted = false, stayHere = false) {
 
   const ncrNumber   = (inpNcr?.value || "").trim();
   const dateCreated = (inpCreated?.value || todayISO());
@@ -353,7 +392,8 @@ function onUpdateSubmit(e, stayHere = false) {
     defectDescription:  defectDesc,
     inspectedBy,
     inspectedOn,
-    status: statusVal
+    status: statusVal,
+    isCompleted: isCompleted
   };
   saveJSON(DETAILS_KEY, detailsMap);
 
@@ -366,7 +406,8 @@ function onUpdateSubmit(e, stayHere = false) {
       dateCreated,     
       lastModified,
       supplier: supplierText,
-      status: statusVal
+      status: statusVal,
+      isCompleted: isCompleted
     };
   } else {
     list.push({
@@ -375,7 +416,8 @@ function onUpdateSubmit(e, stayHere = false) {
       dateCreated,
       lastModified,
       supplier: supplierText,
-      status: statusVal
+      status: statusVal,
+      isCompleted: isCompleted
     });
   }
   saveJSON(STORAGE_KEY, list);
@@ -384,6 +426,11 @@ function onUpdateSubmit(e, stayHere = false) {
   baselineDetails = deepClone(detailsMap[ncrNumber]);
   baselineRow     = deepClone(list.find(r => String(r.ncrNumber) === String(ncrNumber)));
 
-  alert("NCR updated.");
+  if (isCompleted) {
+    alert("NCR has been marked as completed. This form can no longer be edited.");
+  } else {
+    alert("NCR updated.");
+  }
+  
   if (!stayHere) window.location.href = "index.html";
 }

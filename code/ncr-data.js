@@ -82,17 +82,29 @@ function renderNCRTable(page = 1) {
     const dateCreated  = d?.dateCreated  || ncr.dateCreated || "";
     const lastModified = d?.lastModified || ncr.lastModified || "";
     const supplier     = d?.supplierName || ncr.supplier || "";
+    const isCompleted  = d?.isCompleted || ncr.isCompleted || false;
 
     const row = document.createElement("tr");
     row.dataset.ncrId = ncr.id;
+    
+    // Add completed styling if NCR is completed
+    if (isCompleted) {
+      row.classList.add('ncr-completed');
+    }
 
-    let actionsHtml = `
-      <button type="button" class="btn btn-secondary"
-        aria-label="Edit ${ncr.ncrNumber}"
-        onclick="openEdit('${ncr.ncrNumber}', '${dateCreated}', '${(supplier || "").toString().replace(/'/g, "\\'")}')">Edit</button>
-    `;
+    let actionsHtml = "";
+    
+    // Only show edit button for non-completed NCRs
+    if (!isCompleted) {
+      actionsHtml = `
+        <button type="button" class="btn btn-secondary"
+          aria-label="Edit ${ncr.ncrNumber}"
+          onclick="openEdit('${ncr.ncrNumber}', '${dateCreated}', '${(supplier || "").toString().replace(/'/g, "\\'")}')">Edit</button>
+      `;
+    }
+    // No View button for completed NCRs - only PDF button will be shown
 
-    if (status === "active") {
+    if (status === "active" && !isCompleted) {
       actionsHtml += `
         <button type="button" class="btn btn-danger"
           aria-label="Archive ${ncr.ncrNumber}"
@@ -107,7 +119,10 @@ function renderNCRTable(page = 1) {
     `;
 
     row.innerHTML = `
-      <td data-label="NCR Number">${ncr.ncrNumber}</td>
+      <td data-label="NCR Number">
+        ${ncr.ncrNumber}
+        ${isCompleted ? '<span class="completion-badge">COMPLETED</span>' : ''}
+      </td>
       <td data-label="Date Created">${dateCreated}</td>
       <td data-label="Last Modified">${lastModified}</td>
       <td data-label="Supplier">${supplier}</td>

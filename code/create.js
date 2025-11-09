@@ -163,6 +163,24 @@ document.addEventListener("DOMContentLoaded", () => {
   if (submitBtn) {
     submitBtn.addEventListener("click", (e) => {
       e.preventDefault(); // stop real submit while we validate
+      submitForm(false); // false = not completed
+    });
+  }
+
+  // Add Mark as Completed functionality
+  const btnComplete = document.getElementById("btnComplete");
+  if (btnComplete) {
+    btnComplete.setAttribute("type", "button");
+    btnComplete.addEventListener("click", (e) => {
+      e.preventDefault();
+      const confirmed = confirm("Are you sure you want to mark this NCR as completed?\n\nOnce completed, this form cannot be edited anymore.");
+      if (confirmed) {
+        submitForm(true); // true = completed
+      }
+    });
+  }
+
+  function submitForm(isCompleted) {
 
       // read values at click time 
       const purchaseOrder     = (document.getElementById("po-number")?.value || "").trim();
@@ -257,7 +275,8 @@ document.addEventListener("DOMContentLoaded", () => {
         ncrNumber,
         dateCreated: createdOnVal,
         lastModified,
-        supplier: supplierText || supplierChoice
+        supplier: supplierText || supplierChoice,
+        status: isCompleted ? "Completed" : "Open"
       };
       const staged = loadJSON("ncrNewRecords", []);
       if (!staged.some(r => r.ncrNumber === newRow.ncrNumber)) {
@@ -283,14 +302,14 @@ document.addEventListener("DOMContentLoaded", () => {
         defectDescription,
         inspectedBy:   inspectorID,
         inspectedOn:   dateInspectedVal,
-        status:        statusVal
+        status:        statusVal,
+        isCompleted:   isCompleted
       };
       saveJSON("ncrDetails", detailsMap);
 
       
       window.location.href = "index.html"; 
-    });
-  }
+  } // End submitForm function
 
   // regenerates NCR number and resets today date
   const resetBtn = document.getElementById("btnReset");
