@@ -98,7 +98,54 @@ function clearAllValidation() {
   });
 }
 
+// Function to mark required fields
+function markRequiredFields() {
+  const requiredFieldIds = [
+    'po-number',
+    'inspected-by',
+    'defect-desc',
+    'supplier-id',
+    'product-id',
+    'issue-cat-id',
+    'recv-qty',
+    'defect-qty',
+    'inspected-on'
+  ];
+  
+  // Add process-type-id if it exists
+  if (document.getElementById('process-type-id')) {
+    requiredFieldIds.push('process-type-id');
+  }
+  
+  // Mark each required field
+  requiredFieldIds.forEach(fieldId => {
+    const element = document.getElementById(fieldId);
+    if (element) {
+      const formGroup = element.closest('.form-group');
+      if (formGroup) {
+        formGroup.classList.add('required');
+        
+        // Add required attribute for accessibility
+        element.setAttribute('required', 'true');
+        element.setAttribute('aria-required', 'true');
+      }
+    }
+  });
+  
+  // Add required fields legend to the form
+  const form = document.getElementById('ncr-form');
+  if (form && !form.querySelector('.required-fields-legend')) {
+    const legend = document.createElement('div');
+    legend.className = 'required-fields-legend';
+    legend.innerHTML = '<span class="required-asterisk">*</span> indicates required fields';
+    form.insertBefore(legend, form.firstChild);
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  // Mark required fields with asterisks
+  markRequiredFields();
+  
   // fill NCR number and lock it
   const ncrInput = document.getElementById("ncr-number");
   if (ncrInput) {
