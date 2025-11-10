@@ -10,6 +10,26 @@ function saveJSON(key, value) { localStorage.setItem(key, JSON.stringify(value))
 function notChosen(v) { return v === "" || v === "0" || (typeof v === "string" && v.toLowerCase() === "select"); }
 function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
 
+// Helper function to get checkbox values
+function getCheckboxValues(name) {
+  const checkboxes = document.querySelectorAll(`input[name="${name}"]:checked`);
+  return Array.from(checkboxes).map(cb => cb.value);
+}
+
+// Helper function to get single checkbox value (for yes/no type fields)
+function getSingleCheckboxValue(name) {
+  const values = getCheckboxValues(name);
+  return values.length > 0 ? values[0] : "";
+}
+
+// Helper function to set checkbox values
+function setCheckboxValues(name, values) {
+  const checkboxes = document.querySelectorAll(`input[name="${name}"]`);
+  checkboxes.forEach(cb => {
+    cb.checked = Array.isArray(values) ? values.includes(cb.value) : values === cb.value;
+  });
+}
+
 // Validation helper functions
 function clearValidation(elementId) {
   const element = document.getElementById(elementId);
@@ -90,7 +110,7 @@ function clearAllValidation() {
 // Function to mark required fields
 function markRequiredFields() {
   const requiredFieldIds = [
-    'purchase-order',
+    'po-number',      // Updated from 'purchase-order'
     'inspected-by',
     'defect-desc',
     'supplier-id',
@@ -98,7 +118,8 @@ function markRequiredFields() {
     'issue-cat-id',
     'recv-qty',
     'defect-qty',
-    'inspected-on'
+    'inspected-on',
+    'process-type-id' // Added to match create page requirement
   ];
   
   // Mark each required field
@@ -135,7 +156,7 @@ const urlSupplier    = params.get("supplier") || "";
 //DOM refs 
 const form           = document.getElementById("ncr-edit-form") || document.querySelector("form");
 const inpNcr         = document.getElementById("ncr-number");
-const inpCreated     = document.getElementById("create-date");      
+const inpCreated     = document.getElementById("created-on");      // Updated ID
 const selSupplier    = document.getElementById("supplier-id");
 const selProduct     = document.getElementById("product-id");
 const inpRecvQty     = document.getElementById("recv-qty");
@@ -145,7 +166,9 @@ const inpDefectDesc  = document.getElementById("defect-desc");
 const inpInspector   = document.getElementById("inspected-by");
 const inpInspectedOn = document.getElementById("inspected-on");
 const selStatus      = document.getElementById("ncr-status");
-const inpPONum       = document.getElementById("purchase-order");
+const inpPONum       = document.getElementById("po-number");        // Updated ID
+const inpSONum       = document.getElementById("so-number");        // New field
+const selProcessType = document.getElementById("process-type-id");  // New field
 
 //baseline snapshot for Reset 
 let baselineDetails = null;  
@@ -177,6 +200,8 @@ function fillFormFrom(details, row) {
   const setVal = (el, v) => { if (el && v != null && v !== "") el.value = v; };
   if (details) {
     setVal(inpPONum,       details.purchaseOrder);
+    setVal(inpSONum,       details.salesOrder);         // New field
+    setVal(selProcessType, details.processTypeValue);    // New field  
     setVal(selProduct,     details.productValue);
     setVal(inpRecvQty,     details.recvQty);
     setVal(inpDefectQty,   details.defectQty);
@@ -185,6 +210,14 @@ function fillFormFrom(details, row) {
     setVal(inpInspector,   details.inspectedBy);
     setVal(inpInspectedOn, details.inspectedOn);
     setVal(selStatus,      details.status);
+    
+    // Handle checkbox fields
+    if (details.itemNonconforming) {
+      setCheckboxValues("item-nonconforming", details.itemNonconforming);
+    }
+    if (details.processApplicable) {
+      setCheckboxValues("process-applicable", details.processApplicable);
+    }
   }
 }
 
@@ -192,6 +225,24 @@ function fillFormFrom(details, row) {
 document.addEventListener("DOMContentLoaded", () => {
   // Mark required fields with asterisks
   markRequiredFields();
+  
+  // Add mutual exclusivity for Item Marked Nonconforming checkboxes
+  const nonconformingYes = document.getElementById("item-nonconforming-yes");
+  const nonconformingNo = document.getElementById("item-nonconforming-no");
+  
+  if (nonconformingYes && nonconformingNo) {
+    nonconformingYes.addEventListener("change", function() {
+      if (this.checked) {
+        nonconformingNo.checked = false;
+      }
+    });
+    
+    nonconformingNo.addEventListener("change", function() {
+      if (this.checked) {
+        nonconformingYes.checked = false;
+      }
+    });
+  }
   
   // 1) show NCR number (read-only)
   if (inpNcr) {
@@ -317,13 +368,19 @@ function performUpdate(isCompleted = false, stayHere = false) {
   const inspectedOn  = (inpInspectedOn?.value || "");
   const statusVal    = selStatus?.value || "Open";
   const poNumber     = (inpPONum?.value || "").trim();
+  const soNumber     = (inpSONum?.value || "").trim();         // New field
+  const processType  = selProcessType?.value || "";            // New field
+  
+  // Read checkbox values
+  const itemNonconforming = getSingleCheckboxValue("item-nonconforming");
+  const processApplicable = getCheckboxValues("process-applicable");
 
   // Clear any previous validation errors
   clearAllValidation();
 
   //validations with visual feedback
   if (poNumber === "") { 
-    showValidationError("purchase-order", "Purchase Order number is required."); 
+    showValidationError("po-number", "Purchase Order number is required.");  // Fixed ID
     return; 
   }
   if (inspectedBy === "") { 
@@ -345,6 +402,11 @@ function performUpdate(isCompleted = false, stayHere = false) {
   if (notChosen(issueCatVal)) { 
     showValidationError("issue-cat-id", "Please choose an issue category."); 
     return; 
+  }
+  
+  if (notChosen(processType)) {
+    showValidationError("process-type-id", "Please choose a process type."); 
+    return;
   }
 
   const recvQty   = Number(recvQtyStr);
@@ -383,8 +445,10 @@ function performUpdate(isCompleted = false, stayHere = false) {
     dateCreated,
     lastModified,
     purchaseOrder: poNumber,
+    salesOrder: soNumber,                    // New field
     supplierValue: supplierVal,
     supplierName:  supplierText,
+    processTypeValue: processType,           // New field
     productValue:  productVal,
     recvQty,
     defectQty,
@@ -393,7 +457,9 @@ function performUpdate(isCompleted = false, stayHere = false) {
     inspectedBy,
     inspectedOn,
     status: statusVal,
-    isCompleted: isCompleted
+    isCompleted: isCompleted,
+    itemNonconforming: itemNonconforming,    // New checkbox field
+    processApplicable: processApplicable     // New checkbox field
   };
   saveJSON(DETAILS_KEY, detailsMap);
 

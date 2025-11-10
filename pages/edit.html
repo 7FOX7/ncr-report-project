@@ -51,60 +51,93 @@
                 <div class="form-group">
                   <div class="form-group-with-tooltip">
                     <label for="ncr-number">NCR Number</label>
-                    <span class="tooltip" data-tooltip="Auto-generated unique identifier for this NCR" tabindex="0" aria-label="Help for NCR Number"></span>
+                    <span class="tooltip" data-tooltip="Unique identifier automatically generated for this report" tabindex="0" aria-label="Help for NCR Number"></span>
                   </div>
-                  <input type="text" id="ncr-number" name="ncr-number" value="NCR-2024-001" readonly aria-describedby="ncr-number">
+                  <input type="text" id="ncr-number" name="ncr-number" readonly placeholder="Will be auto-generated" aria-describedby="ncr-number">
                 </div>
 
                 <div class="form-group">
                   <div class="form-group-with-tooltip">
-                    <label for="purchase-order">Purchase Order</label>
-                    <span class="tooltip" data-tooltip="Reference number from the purchase order associated with this delivery" tabindex="0" aria-label="Help for Purchase Order"></span>
+                    <label for="created-on">Created On</label>
+                    <span class="tooltip" data-tooltip="Date when this NCR was first created in the system (auto-set to today)" tabindex="0" aria-label="Help for Created Date"></span>
                   </div>
-                  <input type="text" id="purchase-order" name="purchase-order" value="PO-2024-456" placeholder="e.g., PO-2024-123" aria-describedby="purchase-order">
+                  <input type="date" id="created-on" name="created-on" readonly aria-describedby="created-on">
                 </div>
 
                 <div class="form-group">
                   <div class="form-group-with-tooltip">
-                    <label for="supplier-id">Supplier</label>
-                    <span class="tooltip" data-tooltip="Choose the supplier from the dropdown who delivered the non-conforming items" tabindex="0" aria-label="Help for Supplier"></span>
+                    <label for="po-number">Purchase Order #</label>
+                    <span class="tooltip" data-tooltip="Reference number from purchasing system. Format: PO-YYYY-NNNN" tabindex="0" aria-label="Help for Purchase Order Number"></span>
                   </div>
-                  <select id="supplier-id" name="supplier-id" aria-describedby="supplier-id">
-                    <option value="">Select a supplier</option>
-                    <option value="1" selected>Acme Corporation</option>
-                    <option value="2">Global Supplies Ltd</option>
-                  </select>
+                  <input type="text" id="po-number" name="po-number" placeholder="e.g., PO-2025-1234" aria-describedby="po-number">
+                </div>
+
+                <div class="form-group">
+                  <div class="form-group-with-tooltip">
+                    <label for="so-number">Sales Order #</label>
+                    <span class="tooltip" data-tooltip="Reference number from sales system. Format: SO-YYYY-NNNN" tabindex="0" aria-label="Help for Sales Order Number"></span>
+                  </div>
+                  <input type="text" id="so-number" name="so-number" placeholder="e.g., SO-2025-5678" aria-describedby="so-number">
+                </div>
+
+                <div class="form-group">
+                  <div class="form-group-with-tooltip">
+                    <label for="item-nonconforming">Item Marked Nonconforming</label>
+                    <span class="tooltip" data-tooltip="Indicates whether the item has been marked as nonconforming" tabindex="0" aria-label="Help for Item Marked Nonconforming"></span>
+                  </div>
+                  <div class="checkbox-group" role="group" aria-labelledby="item-nonconforming-label">
+                    <label class="checkbox-label">
+                      <input type="checkbox" name="item-nonconforming" value="yes" id="item-nonconforming-yes">
+                      <span class="checkbox-text">Yes</span>
+                    </label>
+                    <label class="checkbox-label">
+                      <input type="checkbox" name="item-nonconforming" value="no" id="item-nonconforming-no">
+                      <span class="checkbox-text">No</span>
+                    </label>
+                  </div>
                 </div>
               </div>
 
               <div class="form-column">
                 <div class="form-group">
                   <div class="form-group-with-tooltip">
-                    <label for="create-user-id">Created By (User ID)</label>
-                    <span class="tooltip" data-tooltip="Employee ID who is creating this NCR. Format: EMP-NNNN" tabindex="0" aria-label="Help for Creator ID"></span>
+                    <label for="supplier-id">Supplier</label>
+                    <span class="tooltip" data-tooltip="Select the vendor or supplier associated with this non-conformance" tabindex="0" aria-label="Help for Supplier"></span>
                   </div>
-                  <input type="text" id="create-user-id" name="create-user-id" value="EMP-1234" placeholder="e.g., EMP-1234" aria-describedby="create-user-id">
-                </div>
-
-                <div class="form-group">
-                  <div class="form-group-with-tooltip">
-                    <label for="create-date">Created On</label>
-                    <span class="tooltip" data-tooltip="Date when this NCR was initially created" tabindex="0" aria-label="Help for Created Date"></span>
-                  </div>
-                  <input type="date" id="create-date" name="create-date" value="2024-03-15" readonly aria-describedby="create-date">
-                </div>
-
-                <div class="form-group">
-                  <div class="form-group-with-tooltip">
-                    <label for="ncr-status">Status</label>
-                    <span class="tooltip" data-tooltip="Current status of this NCR in the resolution workflow" tabindex="0" aria-label="Help for NCR Status"></span>
-                  </div>
-                  <select id="ncr-status" name="ncr-status" aria-describedby="ncr-status">
-                    <option value="open" selected>Open</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="resolved">Resolved</option>
-                    <option value="closed">Closed</option>
+                  <select id="supplier-id" name="supplier-id" aria-describedby="supplier-id">
+                    <option value="">Select a supplier</option>
+                    <option value="1">ABC Supplier</option>
+                    <option value="2">XYZ Corp</option>
                   </select>
+                </div>
+
+                <div class="form-group">
+                  <div class="form-group-with-tooltip">
+                    <label for="process-type-id">Process Type</label>
+                    <span class="tooltip" data-tooltip="Type of business process where the issue was discovered" tabindex="0" aria-label="Help for Process Type"></span>
+                  </div>
+                  <select id="process-type-id" name="process-type-id" aria-describedby="process-type-id">
+                    <option value="">Select process type</option>
+                    <option value="1">Inspection</option>
+                    <option value="2">Packaging</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <div class="form-group-with-tooltip">
+                    <label for="process-applicable">Process Applicable</label>
+                    <span class="tooltip" data-tooltip="Identify which process is applicable to this non-conformance" tabindex="0" aria-label="Help for Process Applicable"></span>
+                  </div>
+                  <div class="checkbox-group" role="group" aria-labelledby="process-applicable-label">
+                    <label class="checkbox-label">
+                      <input type="checkbox" name="process-applicable" value="supplier-rec-insp" id="process-applicable-supplier">
+                      <span class="checkbox-text">Supplier or Rec-Insp</span>
+                    </label>
+                    <label class="checkbox-label">
+                      <input type="checkbox" name="process-applicable" value="wip-production" id="process-applicable-wip">
+                      <span class="checkbox-text">WIP (Production Order)</span>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
@@ -129,7 +162,7 @@
                   </div>
                   <select id="product-id" name="product-id" aria-describedby="product-id">
                     <option value="">Select a product</option>
-                    <option value="1" selected>Part-001 Widget A</option>
+                    <option value="1">Part-001 Widget A</option>
                     <option value="2">Part-002 Widget B</option>
                   </select>
                 </div>
@@ -139,7 +172,7 @@
                     <label for="recv-qty">Received Quantity</label>
                     <span class="tooltip" data-tooltip="Total number of items received in this batch" tabindex="0" aria-label="Help for Received Quantity"></span>
                   </div>
-                  <input type="number" id="recv-qty" name="recv-qty" min="0" value="100" placeholder="e.g., 100" aria-describedby="recv-qty">
+                  <input type="number" id="recv-qty" name="recv-qty" min="0" placeholder="e.g., 100" aria-describedby="recv-qty">
                 </div>
 
                 <div class="form-group">
@@ -147,7 +180,7 @@
                     <label for="defect-qty">Defective Quantity</label>
                     <span class="tooltip" data-tooltip="Number of items found to be defective or non-conforming" tabindex="0" aria-label="Help for Defective Quantity"></span>
                   </div>
-                  <input type="number" id="defect-qty" name="defect-qty" min="0" value="5" placeholder="e.g., 5" aria-describedby="defect-qty">
+                  <input type="number" id="defect-qty" name="defect-qty" min="0" placeholder="e.g., 5" aria-describedby="defect-qty">
                 </div>
 
                 <div class="form-group">
@@ -157,7 +190,7 @@
                   </div>
                   <select id="issue-cat-id" name="issue-cat-id" aria-describedby="issue-cat-id">
                     <option value="">Select issue category</option>
-                    <option value="1" selected>Broken</option>
+                    <option value="1">Broken</option>
                     <option value="2">Mislabelled</option>
                   </select>
                 </div>
@@ -169,7 +202,7 @@
                     <label for="defect-desc">Defect Description</label>
                     <span class="tooltip" data-tooltip="Provide detailed description of what is wrong with the product" tabindex="0" aria-label="Help for Defect Description"></span>
                   </div>
-                  <textarea id="defect-desc" name="defect-desc" rows="4" placeholder="Describe the defect in detail, including visual appearance, functionality issues, etc." aria-describedby="defect-desc">Packaging was damaged during shipping, causing visible dents and tears in the outer box. Product inside appears undamaged but packaging integrity is compromised.</textarea>
+                  <textarea id="defect-desc" name="defect-desc" rows="4" placeholder="Describe the defect in detail, including visual appearance, functionality issues, etc." aria-describedby="defect-desc"></textarea>
                 </div>
 
                 <div class="form-group">
@@ -177,7 +210,7 @@
                     <label for="inspected-by">Inspected By (User ID)</label>
                     <span class="tooltip" data-tooltip="Employee ID of the person who performed the inspection. Format: EMP-NNNN" tabindex="0" aria-label="Help for Inspector ID"></span>
                   </div>
-                  <input type="text" id="inspected-by" name="inspected-by" value="EMP-3456" placeholder="e.g., EMP-1234" aria-describedby="inspected-by">
+                  <input type="text" id="inspected-by" name="inspected-by" placeholder="e.g., EMP-1234" aria-describedby="inspected-by">
                 </div>
 
                 <div class="form-group">
@@ -185,7 +218,7 @@
                     <label for="inspected-on">Inspected On</label>
                     <span class="tooltip" data-tooltip="Date when the inspection that discovered this issue was performed" tabindex="0" aria-label="Help for Inspection Date"></span>
                   </div>
-                  <input type="date" id="inspected-on" name="inspected-on" value="2024-03-14" aria-describedby="inspected-on">
+                  <input type="date" id="inspected-on" name="inspected-on" aria-describedby="inspected-on">
                 </div>
               </div>
             </div>
@@ -209,7 +242,6 @@
                     <span class="tooltip" data-tooltip="Upload photos, documents, or other evidence related to this NCR. Supported formats: PDF, JPG, PNG" tabindex="0" aria-label="Help for File Upload"></span>
                   </div>
                   <input type="file" id="attachment-file" name="attachment-file" accept=".pdf,.jpg,.jpeg,.png" aria-describedby="attachment-file">
-                  <p class="form-help">Current file: damage_photo.jpg</p>
                 </div>
               </div>
 
@@ -219,7 +251,7 @@
                     <label for="attachment-caption">Caption</label>
                     <span class="tooltip" data-tooltip="Brief description of what the uploaded file shows or contains" tabindex="0" aria-label="Help for Caption"></span>
                   </div>
-                  <input type="text" id="attachment-caption" name="attachment-caption" value="Photo of damaged packaging" placeholder="e.g., Photo of damaged packaging" aria-describedby="attachment-caption">
+                  <input type="text" id="attachment-caption" name="attachment-caption" placeholder="e.g., Photo of damaged packaging" aria-describedby="attachment-caption">
                 </div>
               </div>
             </div>
@@ -236,9 +268,9 @@
       </form>
     </main>
     <footer role="contentinfo" class="footer">
-      <div>
-        <p>&copy; 2025 NCR Management System. All rights reserved.</p>
-      </div>
+      <div>
+        <p>&copy; 2025 NCR Management System. All rights reserved.</p>
+      </div>
     </footer>
     <script src="../code/edit.js"></script>
   </body>

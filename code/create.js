@@ -158,6 +158,24 @@ document.addEventListener("DOMContentLoaded", () => {
   // Mark required fields with asterisks
   markRequiredFields();
   
+  // Add mutual exclusivity for Item Marked Nonconforming checkboxes
+  const nonconformingYes = document.getElementById("item-nonconforming-yes");
+  const nonconformingNo = document.getElementById("item-nonconforming-no");
+  
+  if (nonconformingYes && nonconformingNo) {
+    nonconformingYes.addEventListener("change", function() {
+      if (this.checked) {
+        nonconformingNo.checked = false;
+      }
+    });
+    
+    nonconformingNo.addEventListener("change", function() {
+      if (this.checked) {
+        nonconformingYes.checked = false;
+      }
+    });
+  }
+  
   // Add mutual exclusivity logic for item-nonconforming checkboxes
   const itemNonconformingCheckboxes = document.querySelectorAll('input[name="item-nonconforming"]');
   itemNonconformingCheckboxes.forEach(checkbox => {
