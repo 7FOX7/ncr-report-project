@@ -13,10 +13,10 @@
 
 ### 🧭 **User Interface & Layout**
 
-* [ ] Reduce the **filter panel** size when opened; it currently takes up too much space.
-* [ ] Add a **Supplier dropdown** in the filter section (using NCR Supplier data).
-* [ ] Display **records per page** control at the bottom of the page.
-* [ ] Improve **contrast** between the **Edit** and **Archive** buttons for better visibility.
+* [X] Reduce the **filter panel** size when opened; it currently takes up too much space.
+* [X] Add a **Supplier dropdown** in the filter section (using NCR Supplier data).
+* [X] Display **records per page** control at the bottom of the page.
+* [X] Improve **contrast** between the **Edit** and **Archive** buttons for better visibility.
 * [ ] Include a **column showing progress** — indicate which department (QA / Engineering) is currently handling the NCR.
 * [ ] Add a **“Sort by Progress”** option to organize NCRs by their current workflow stage.
 
@@ -26,18 +26,18 @@
 
 * [ ] Make **NCR Number** automatically generated and  **displayed as a label** , not a textbox.
 * [ ] Place **NCR Number** and **Date Created** as static labels at the **top** of the form.
-* [ ] Highlight or mark **incomplete fields** and automatically **scroll/focus** to them.
-* [ ] Visually mark all **required fields** (add red asterisk or similar indicator).
+* [X] Highlight or mark **incomplete fields** and automatically **scroll/focus** to them.
+* [X] Visually mark all **required fields** (add red asterisk or similar indicator).
 
 ---
 
 ### 💾 **Saving & Completion Logic**
 
-* [ ] Allow saving **partially completed NCRs** (add a separate button for “Save Progress”).
-* [ ] Keep **“Mark as Completed”** as a final step for full completion.
+* [X] Allow saving **partially completed NCRs** (add a separate button for “Save Progress”).
+* [X] Keep **“Mark as Completed”** as a final step for full completion.
 * [ ] Before allowing completion, users must **review the NCR** summary page.
 * [ ] Add a **Text Preview page** that displays a read-only text version of the NCR before confirming completion.
-* [ ] Provide **success feedback** when saving (e.g., message: “NCR successfully saved”).
+* [X] Provide **success feedback** when saving (e.g., message: “NCR successfully saved”).
 
 ---
 
