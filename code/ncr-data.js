@@ -93,22 +93,30 @@ function renderNCRTable(page = 1) {
     }
 
     let actionsHtml = "";
-    
-    // Only show edit button for non-completed NCRs
-    if (!isCompleted) {
+    // determine whether this row is archived; dataset may annotate records with an `archived` flag
+    const isArchived = (ncr.archived === true) || ncrArchivedData.some(a => a.id === ncr.id);
+
+    // Active (non-archived) rows: show Edit and Archive (unless completed)
+    if (!isCompleted && !isArchived) {
       actionsHtml = `
         <button type="button" class="btn btn-secondary"
           aria-label="Edit ${ncr.ncrNumber}"
           onclick="openEdit('${ncr.ncrNumber}', '${dateCreated}', '${(supplier || "").toString().replace(/'/g, "\\'")}')">Edit</button>
       `;
-    }
-    // No View button for completed NCRs - only PDF button will be shown
 
-    if (status === "active" && !isCompleted) {
       actionsHtml += `
-        <button type="button" class="btn btn-danger"
+        <button type="button" class="btn btn-outline"
           aria-label="Archive ${ncr.ncrNumber}"
           onclick="showArchiveConfirmation(${ncr.id}, '${ncr.ncrNumber}')">Archive</button>
+      `;
+    }
+
+    // Archived rows: show Un-archive
+    if (isArchived) {
+      actionsHtml += `
+        <button type="button" class="btn btn-secondary"
+          aria-label="Un-archive ${ncr.ncrNumber}"
+          onclick="showUnarchiveConfirmation(${ncr.id}, '${ncr.ncrNumber}')">Un-archive</button>
       `;
     }
 
@@ -166,6 +174,39 @@ function archiveNCR(ncrId) {
   filterNCRData(1);
 }
 
+// Un-archive flow: move record from archived set back to active set
+function unarchiveNCR(ncrId) {
+  const idx = ncrArchivedData.findIndex(r => r.id === ncrId);
+  if (idx >= 0) {
+    const rec = ncrArchivedData.splice(idx, 1)[0];
+    ncrData.push(rec);
+  }
+  // Close modal if open
+  closeUnarchiveModal();
+
+  // Preserve current pagination and filter when refreshing
+  let currentPage = 1;
+  if (typeof getCurrentPage === 'function') {
+    try { currentPage = getCurrentPage(); } catch (_) { currentPage = 1; }
+  }
+  filterNCRData(currentPage);
+}
+
+function showUnarchiveConfirmation(ncrId, ncrNumber) {
+  const modal = document.getElementById("unarchive-modal");
+  const span = document.getElementById("unarchive-ncr-number");
+  const confirmButton = document.getElementById("confirm-unarchive");
+  if (span) span.textContent = ncrNumber;
+  if (confirmButton) confirmButton.onclick = () => unarchiveNCR(ncrId);
+  if (modal) { modal.style.display = "block"; modal.setAttribute("aria-hidden", "false"); }
+  const cancelBtn = document.getElementById("cancel-unarchive"); if (cancelBtn) cancelBtn.focus();
+}
+
+function closeUnarchiveModal() {
+  const modal = document.getElementById("unarchive-modal");
+  if (modal) { modal.style.display = "none"; modal.setAttribute("aria-hidden", "true"); }
+}
+
 // PDF modal 
 function downloadPDF(ncrNumber) {
   const modal = document.getElementById("pdf-modal");
@@ -182,6 +223,8 @@ function closePDFModal() {
 
 function getSupplierFilterText() {
   const el =
+    document.querySelector("#ncr-search") ||
+    document.querySelector('select[name="ncr-search"]') ||
     document.querySelector("#search-supplier") ||
     document.querySelector('input[name="search-supplier"]') ||
     document.querySelector('input[data-filter="supplier"]') ||
@@ -191,7 +234,17 @@ function getSupplierFilterText() {
 
 function getActiveDataset() {
   const status = document.querySelector('input[name="ncr-active"]:checked')?.value;
-  return status === "archived" ? ncrArchivedData : ncrData;
+  if (status === "archived") {
+    // mark archived rows explicitly
+    return ncrArchivedData.map(r => Object.assign({}, r, { archived: true }));
+  }
+  if (status === "all") {
+    // return active then archived, annotate each with archived flag
+    return ncrData.map(r => Object.assign({}, r, { archived: false }))
+      .concat(ncrArchivedData.map(r => Object.assign({}, r, { archived: true })));
+  }
+  // default: active
+  return ncrData.map(r => Object.assign({}, r, { archived: false }));
 }
 
 function filterNCRData(page = 1) {
@@ -205,11 +258,37 @@ function filterNCRData(page = 1) {
     ncrFilteredData = activeSet.filter(r => {
       const baseName = (r.supplier || "").toLowerCase();
       const detailsName = (detailsMap[r.ncrNumber]?.supplierName || "").toLowerCase();
-      return baseName.includes(supplierTerm) || detailsName.includes(supplierTerm);
+      return baseName === supplierTerm || detailsName === supplierTerm;
     });
   }
 
   renderNCRTable(page);
+}
+
+// Populate supplier dropdown with unique suppliers
+function populateSupplierDropdown() {
+  const dropdown = document.querySelector("#ncr-search");
+  if (!dropdown) return;
+
+  const allData = [...ncrData, ...ncrArchivedData];
+  const detailsMap = getDetailsMap();
+  const suppliersSet = new Set();
+
+  allData.forEach(r => {
+    const baseName = (r.supplier || "").trim();
+    const detailsName = (detailsMap[r.ncrNumber]?.supplierName || "").trim();
+    if (baseName) suppliersSet.add(baseName);
+    if (detailsName && detailsName !== baseName) suppliersSet.add(detailsName);
+  });
+
+  const suppliers = Array.from(suppliersSet).sort();
+  dropdown.innerHTML = '<option value="">All Suppliers</option>';
+  suppliers.forEach(supplier => {
+    const option = document.createElement('option');
+    option.value = supplier.toLowerCase();
+    option.textContent = supplier;
+    dropdown.appendChild(option);
+  });
 }
 
 // UI setup 
@@ -218,21 +297,13 @@ function setupFilterEventListener() {
                     || document.querySelector('button[data-action="apply-filters"]');
   if (filterButton) filterButton.addEventListener("click", () => filterNCRData(1));
 
-  // Apply filtering when pressing Enter in the search box as well
-  const searchEl =
-    document.querySelector("#search-supplier") ||
-    document.querySelector('input[name="search-supplier"]') ||
-    document.querySelector('input[data-filter="supplier"]') ||
-    document.querySelector('input[placeholder*="supplier" i]');
+  // Apply filtering when dropdown changes
+  const searchEl = document.querySelector("#ncr-search");
   if (searchEl) {
-    searchEl.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        filterNCRData(1);
-      }
-    });
+    searchEl.addEventListener('change', () => filterNCRData(1));
   }
 
+  // Filter when the active/archived/all radios change
   document.querySelectorAll('input[name="ncr-active"]').forEach(r => {
     r.addEventListener("change", () => filterNCRData(1));
   });
@@ -245,11 +316,14 @@ function setupFilterEventListener() {
 
 function setupModalEventListeners() {
   const cancelArchive = document.getElementById("cancel-archive"); if (cancelArchive) cancelArchive.addEventListener("click", closeArchiveModal);
+  const cancelUnarchive = document.getElementById("cancel-unarchive"); if (cancelUnarchive) cancelUnarchive.addEventListener("click", closeUnarchiveModal);
   const closePDFButton = document.getElementById("close-pdf-modal"); if (closePDFButton) closePDFButton.addEventListener("click", closePDFModal);
   window.addEventListener("click", (e) => {
     const archiveModal = document.getElementById("archive-modal");
+    const unarchiveModal = document.getElementById("unarchive-modal");
     const pdfModal = document.getElementById("pdf-modal");
     if (e.target === archiveModal) closeArchiveModal();
+    if (e.target === unarchiveModal) closeUnarchiveModal();
     if (e.target === pdfModal) closePDFModal();
   });
 }
@@ -265,6 +339,7 @@ document.addEventListener("DOMContentLoaded", function () {
   mergeIncomingRecords();
   applyEdits();
 
+  populateSupplierDropdown();
   ncrFilteredData = getActiveDataset();
 
   setupModalEventListeners();

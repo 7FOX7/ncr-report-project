@@ -5,13 +5,13 @@ function renderPaginationControls(totalItems, itemsPerPage, currentPage = 1) {
     if (!paginationPagesContainer || !paginationControls) return;
     // Clear existing page buttons
     paginationPagesContainer.innerHTML = '';
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
-    if (totalPages <= 1) {
-        paginationControls.style.display = 'none';
-        return;
-    } else {
-        paginationControls.style.display = '';
-    }
+    // Always show pagination controls (so the records-per-page select and prev/next
+    // are visible). Page buttons will be generated based on totalPages; if there
+    // are zero items we still render a single page (page 1) so the UI remains
+    // consistent and Prev/Next can be enabled/disabled appropriately.
+    const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+    paginationControls.style.display = '';
+
     for (let i = 1; i <= totalPages; i++) {
         const btn = document.createElement('button');
         btn.type = 'button';
@@ -20,6 +20,11 @@ function renderPaginationControls(totalItems, itemsPerPage, currentPage = 1) {
         if (i === currentPage) btn.setAttribute('aria-current', 'page');
         btn.textContent = i;
         paginationPagesContainer.appendChild(btn);
+    }
+    // After rendering pages, update Prev/Next enabled state based on currentPage
+    if (typeof updatePrevNextButtons === 'function') {
+        // Use a microtask to ensure DOM insertion is complete before computing max page
+        Promise.resolve().then(() => updatePrevNextButtons(currentPage));
     }
 }
 // Pagination functionality for NCR Management System
@@ -138,8 +143,9 @@ function updatePrevNextButtons(currentPage) {
 function updatePaginationInfo(currentPage, dataSet) {
     const paginationText = document.querySelector('.pagination-text');
     if (paginationText) {
-        // Calculate items shown based on page (4 items per page)
-        const itemsPerPage = 5;
+        // Calculate items shown based on current records-per-page selection
+        const perSelect = document.getElementById('search-amount');
+        const itemsPerPage = perSelect ? parseInt(perSelect.value, 10) || 5 : 5;
         const totalItems = dataSet.length;
         
         const startItem = (currentPage - 1) * itemsPerPage + 1;

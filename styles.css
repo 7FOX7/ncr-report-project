@@ -319,7 +319,7 @@ h2 {
 
 .search-columns {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr;
   gap: 2rem;
   align-items: start;
 }
@@ -355,6 +355,20 @@ h2 {
   color: #6c757d;
   font-size: 0.875rem;
   margin-bottom: 0;
+}
+
+/* NCR list header: heading on the left, actions (Create button) on the right */
+.ncr-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.ncr-list-actions .btn {
+  /* keep the primary button sized appropriately in the header */
+  padding: 0.5rem 0.9rem;
+  font-size: 0.95rem;
 }
 
 /* Form controls */
@@ -1122,6 +1136,25 @@ footer {
   gap: 0.5rem;
 }
 
+/* Records-per-page control inside pagination */
+.records-per-page-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 0.5rem;
+}
+.records-per-page-select {
+  display: inline-block;
+  min-width: 3.5ch;
+  padding: 0.35rem 0.6rem;
+  height: 36px;
+  border: 1px solid #dee2e6;
+  background: #fff;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #212529;
+}
+
 .pagination-pages {
   display: flex;
   align-items: center;
@@ -1152,6 +1185,25 @@ footer {
   background: #f8f9fa;
   border-color: #adb5bd;
   color: rgb(0, 0, 0); 
+}
+
+/* Visually indicate disabled state for pagination controls */
+.pagination-btn:disabled,
+.pagination-btn[aria-disabled="true"] {
+  opacity: 0.55;
+  background: #f8f9fa;
+  border-color: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Prevent hover from changing appearance when disabled */
+.pagination-btn:disabled:hover,
+.pagination-btn[aria-disabled="true"]:hover {
+  background: #f8f9fa;
+  border-color: #e9ecef;
+  color: #6c757d;
 }
 
 .pagination-btn-page {

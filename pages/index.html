@@ -38,12 +38,7 @@
       <section class="actions-section" aria-labelledby="actions-heading">
         <h2 id="actions-heading" class="sr-only">NCR Actions</h2>
         
-        <div class="create-section">
-          <a href="create.html" class="btn btn-primary" role="button" aria-describedby="create-description">
-            Create New NCR
-          </a>
-          <p id="create-description" class="action-description">Start a new Non-Conformance Report</p>
-        </div>
+        <!-- Create button moved to the NCR Records header -->
 
         <div class="search-section">
           <!-- Collapsible search toggle -->
@@ -60,8 +55,10 @@
             <div class="search-columns">
               <div class="form-column">
                 <label for="ncr-search" class="search-label sr-only">Search NCR by Supplier:</label>
-                <input type="search" id="ncr-search" name="ncr-search" placeholder="Enter NCR supplier (e.g., NorthPoint Co.)" aria-describedby="search-help">
-                <p id="search-help" class="search-help">Search for existing NCR records by supplier name</p>
+                <select id="ncr-search" name="ncr-search" aria-describedby="search-help">
+                  <option value="">All Suppliers</option>
+                </select>
+                <p id="search-help" class="search-help">Filter NCR records by supplier</p>
               </div>
               
               <div class="form-column">
@@ -74,32 +71,34 @@
                   <input type="radio" id="search-archived" name="ncr-active" value="archived" aria-describedby="status-help" tabindex="0">
                   <label for="search-archived" class="search-label">Archived records</label>
                 </div>
+
+                <div class="search-row end-align">
+                  <input type="radio" id="search-all" name="ncr-active" value="all" aria-describedby="status-help" tabindex="0">
+                  <label for="search-all" class="search-label">All records</label>
+                </div>
+
                 <p id="status-help" class="status-help">View active or archived NCR records</p>
               </div>
 
-              <div class="form-column">
-                <div class="search-row end-align">
-                  <label for="search-amount">Records per page:</label>
-                  <select name="search-amount" id="search-amount" class="records-per-page-select" aria-describedby="records-help">
-                    <option value="5">5</option>
-                    <option value="10">10</option>
-                    <option value="15">15</option>
-                  </select>
-                </div>
-                <p id="records-help" class="records-help">Amount of records displayed per page</p>
-              </div>
+              <!-- records-per-page moved into pagination controls -->
             </div> 
 
-            <div style="display: flex; justify-content: center;">
-              <button type="button" id="btnFilter" class="btn btn-primary">Apply Filters</button>
-            </div>
+            <!-- Filters apply instantly as you type/change options -->
           </div>
         </div>
       </section>
 
       <section class="ncr-list-section" aria-labelledby="ncr-list-heading">
-        <h2 id="ncr-list-heading">NCR Records</h2>
-        
+        <div class="ncr-list-header">
+          <h2 id="ncr-list-heading">NCR Records</h2>
+          <div class="ncr-list-actions">
+            <a href="create.html" class="btn btn-primary" role="button" aria-describedby="create-description">
+              Create New NCR
+            </a>
+            <p id="create-description" class="action-description sr-only">Start a new Non-Conformance Report</p>
+          </div>
+        </div>
+
         <div class="table-container">
           <table class="ncr-table" role="table" aria-label="Non-Conformance Reports">
             <thead>
@@ -137,6 +136,14 @@
               <span class="pagination-btn-text">Next</span>
               <span aria-hidden="true">›</span>
             </button>
+            <div class="records-per-page-container">
+              <select name="search-amount" id="search-amount" class="records-per-page-select" aria-describedby="records-help" aria-label="Records per page">
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="15">15</option>
+              </select>
+              <p id="records-help" class="records-help sr-only">Amount of records displayed per page</p>
+            </div>
           </div>
         </nav>
       </section>
@@ -153,6 +160,23 @@
           <div class="modal-footer">
             <button type="button" id="cancel-archive" class="btn btn-secondary">Cancel</button>
             <button type="button" id="confirm-archive" class="btn btn-danger">Archive</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Un-archive modal -->
+      <div id="unarchive-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="unarchive-modal-title" aria-describedby="unarchive-modal-description">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 id="unarchive-modal-title">Confirm Un-archive</h3>
+          </div>
+          <div class="modal-body">
+            <p id="unarchive-modal-description">Are you sure you want to un-archive NCR <strong id="unarchive-ncr-number"></strong> and move it back to active records?</p>
+            <p class="modal-warning">This will make the NCR editable again.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="cancel-unarchive" class="btn btn-secondary">Cancel</button>
+            <button type="button" id="confirm-unarchive" class="btn btn-primary">Un-archive</button>
           </div>
         </div>
       </div>
