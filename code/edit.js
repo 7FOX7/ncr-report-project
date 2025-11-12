@@ -30,6 +30,65 @@ function setCheckboxValues(name, values) {
   });
 }
 
+/* ---------------------- ENGINEERING HELPERS (ADDED) ---------------------- */
+function readEngineeringFromForm() {
+  const get = (id) => document.getElementById(id);
+  const isChecked = (id) => !!get(id)?.checked;
+
+  return {
+    // booleans
+    useAsIs:       isChecked("eng-useAsIs"),
+    repair:        isChecked("eng-repair"),
+    rework:        isChecked("eng-rework"),
+    scrap:         isChecked("eng-scrap"),
+    custNotifNCR:  isChecked("eng-custNotif"),
+    drawingReqUpd: isChecked("eng-drawingReqUpd"),
+    // text/number/dates
+    disposition:   (get("eng-disposition")?.value || "").trim(),
+    origRevNum:    Number(get("eng-origRevNum")?.value || 0) || 0,
+    nameOfEng:     (get("eng-nameOfEng")?.value || "").trim(),
+    UpdatedRev:    get("eng-UpdatedRev")?.value || "",
+    RevisionDate:  get("eng-RevisionDate")?.value || "",
+    submittedDate: get("eng-submittedDate")?.value || ""
+  };
+}
+
+function writeEngineeringToForm(eng) {
+  if (!eng) return;
+  const set = (id, v) => { const el = document.getElementById(id); if (el!=null) el.value = v ?? el.value; };
+  const setCk = (id, v) => { const el = document.getElementById(id); if (el!=null) el.checked = !!v; };
+
+  setCk("eng-useAsIs",       eng.useAsIs);
+  setCk("eng-repair",        eng.repair);
+  setCk("eng-rework",        eng.rework);
+  setCk("eng-scrap",         eng.scrap);
+  setCk("eng-custNotif",     eng.custNotifNCR);
+  set("eng-disposition",     eng.disposition);
+  setCk("eng-drawingReqUpd", eng.drawingReqUpd);
+  set("eng-origRevNum",      eng.origRevNum ?? "");
+  set("eng-nameOfEng",       eng.nameOfEng ?? "");
+  set("eng-UpdatedRev",      eng.UpdatedRev ?? "");
+  set("eng-RevisionDate",    eng.RevisionDate ?? "");
+  set("eng-submittedDate",   eng.submittedDate ?? "");
+}
+
+// Gate: enable/disable Engineering until inspector part is filled
+function lockEngineeringIfNeeded() {
+  const engSection = document.getElementById("engineering-section");
+  if (!engSection) return;
+
+  const hasInspector = (document.getElementById("inspected-by")?.value || "").trim() !== "" &&
+                       (document.getElementById("inspected-on")?.value || "") !== "";
+
+  const disableAll = (disabled) => {
+    engSection.querySelectorAll("input, textarea, select").forEach(el => el.disabled = disabled);
+  };
+
+  // If inspector part is not finished, disable inputs but still allow the accordion to open
+  disableAll(!hasInspector);
+}
+/* -------------------- END ENGINEERING HELPERS (ADDED) -------------------- */
+
 // Validation helper functions
 function clearValidation(elementId) {
   const element = document.getElementById(elementId);
@@ -193,6 +252,10 @@ function fillFormFrom(details, row) {
   if (inpCreated) {
     inpCreated.value = (details?.dateCreated || row?.dateCreated || urlCreated || todayISO());
   }
+   // Engineering added
+  if (details && details.engineering) {
+    writeEngineeringToForm(details.engineering);
+  }
   if (selSupplier) {
     const supplierText = (details?.supplierName || row?.supplier || urlSupplier || "");
     setSelectByText(selSupplier, supplierText);
@@ -269,6 +332,15 @@ document.addEventListener("DOMContentLoaded", () => {
   if (details && details.isCompleted) {
     disableFormForCompletedNCR();
   }
+
+  /* --------- Engineering lock/unlock based on Inspector fields (ADDED) --------- */
+  lockEngineeringIfNeeded();
+  ["inspected-by","inspected-on"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener("change", lockEngineeringIfNeeded);
+    if (el) el.addEventListener("input",  lockEngineeringIfNeeded);
+  });
+  /* -------------------- End Engineering lock wiring (ADDED) -------------------- */
 
   // update 
   if (form) form.addEventListener("submit", onUpdateSubmit);
@@ -461,6 +533,23 @@ function performUpdate(isCompleted = false, stayHere = false) {
     itemNonconforming: itemNonconforming,    // New checkbox field
     processApplicable: processApplicable     // New checkbox field
   };
+
+  /* ---------------------- ENGINEERING SAVE BLOCK (ADDED) ---------------------- */
+  const engineering = readEngineeringFromForm();
+
+  // If any engineering choice is made, require name and notes
+  const anyEngChoice = engineering.useAsIs || engineering.repair || engineering.rework ||
+                       engineering.scrap || engineering.custNotifNCR || engineering.drawingReqUpd;
+
+  if (anyEngChoice) {
+    if (!engineering.nameOfEng) { showValidationError("eng-nameOfEng", "Engineer name is required when a disposition is selected."); return; }
+    if (!engineering.disposition) { showValidationError("eng-disposition", "Please provide disposition notes."); return; }
+  }
+
+  // attach under details.engineering without disturbing existing keys
+  detailsMap[ncrNumber].engineering = engineering;
+  /* -------------------- END ENGINEERING SAVE BLOCK (ADDED) -------------------- */
+
   saveJSON(DETAILS_KEY, detailsMap);
 
   //Patch the home table list 

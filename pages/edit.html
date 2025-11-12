@@ -258,6 +258,115 @@
           </div>
         </fieldset>
 
+        <!-- ENGINEERING -->
+<fieldset class="collapsible-fieldset">
+  <input type="radio" id="engineering-toggle" name="fieldset-toggle" class="fieldset-toggle" aria-label="Toggle Engineering section">
+  <label for="engineering-toggle" class="fieldset-toggle-label">
+    <legend>Engineering Disposition & Actions</legend>
+    <span class="fieldset-toggle-icon" aria-hidden="true">▼</span>
+  </label>
+
+  <div class="fieldset-content" id="engineering-section">
+    <div class="form-columns">
+      <div class="form-column">
+        <!-- Disposition choices -->
+        <div class="form-group">
+          <div class="form-group-with-tooltip">
+            <label>Engineering Disposition</label>
+            <span class="tooltip" data-tooltip="Choose all applicable dispositions." tabindex="0"></span>
+          </div>
+          <div class="checkbox-group" role="group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="eng-useAsIs"    name="eng-dispo" value="useAsIs"><span class="checkbox-text">Use as-is</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="eng-repair"     name="eng-dispo" value="repair"><span class="checkbox-text">Repair</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="eng-rework"     name="eng-dispo" value="rework"><span class="checkbox-text">Rework</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="eng-scrap"      name="eng-dispo" value="scrap"><span class="checkbox-text">Scrap</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="eng-custNotif"  name="eng-dispo" value="custNotifNCR"><span class="checkbox-text">Customer Notified</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Free text disposition note -->
+        <div class="form-group">
+          <div class="form-group-with-tooltip">
+            <label for="eng-disposition">Disposition Notes</label>
+            <span class="tooltip" data-tooltip="Brief explanation or additional instructions from Engineering." tabindex="0"></span>
+          </div>
+          <textarea id="eng-disposition" name="eng-disposition" rows="3" placeholder="Summary of engineering decision..."></textarea>
+        </div>
+
+        <!-- Engineering owner -->
+        <div class="form-group">
+          <div class="form-group-with-tooltip">
+            <label for="eng-nameOfEng">Engineer Name</label>
+            <span class="tooltip" data-tooltip="Full name of the responsible engineer." tabindex="0"></span>
+          </div>
+          <input type="text" id="eng-nameOfEng" name="eng-nameOfEng" placeholder="e.g., John Smith">
+        </div>
+      </div>
+
+      <div class="form-column">
+        <!-- Drawing update flags -->
+        <div class="form-group">
+          <div class="form-group-with-tooltip">
+            <label>Drawing / Revision</label>
+            <span class="tooltip" data-tooltip="Track any drawing change requirements and revision numbers/dates." tabindex="0"></span>
+          </div>
+
+          <div class="checkbox-group" role="group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="eng-drawingReqUpd" name="eng-drawingReqUpd">
+              <span class="checkbox-text">Drawing Update Required</span>
+            </label>
+          </div>
+
+          <div class="form-columns">
+            <div class="form-column">
+              <div class="form-group">
+                <label for="eng-origRevNum">Original Rev #</label>
+                <input type="number" id="eng-origRevNum" name="eng-origRevNum" min="0" placeholder="e.g., 3">
+              </div>
+            </div>
+            <div class="form-column">
+              <div class="form-group">
+                <label for="eng-UpdatedRev">Updated Rev Date/Time</label>
+                <input type="datetime-local" id="eng-UpdatedRev" name="eng-UpdatedRev">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-columns">
+            <div class="form-column">
+              <div class="form-group">
+                <label for="eng-RevisionDate">Revision Date</label>
+                <input type="date" id="eng-RevisionDate" name="eng-RevisionDate">
+              </div>
+            </div>
+            <div class="form-column">
+              <div class="form-group">
+                <label for="eng-submittedDate">Submitted Date</label>
+                <input type="date" id="eng-submittedDate" name="eng-submittedDate">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.form-columns -->
+  </div><!-- /.fieldset-content -->
+</fieldset>
+
+
+
+
         <div class="form-actions">
           <button type="submit" class="btn btn-primary">Update NCR</button>
           <button type="reset" class="btn btn-secondary">Reset Changes</button>
