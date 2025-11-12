@@ -43,7 +43,14 @@
 
 ### 📂 **Archiving & PDF Handling**
 
-* [ ] Clarify how to **unarchive** NCRs (add an “Unarchive” option).
-* [ ] **Archived NCRs** should be  **view-only** , not editable.
-* [ ] Keep **PDF view/download** available for archived NCRs.
-* [ ] Allow text-based NCR preview even when archived.
+* [X] Clarify how to **unarchive** NCRs (add an “Unarchive” option).
+* [X] **Archived NCRs** should be  **view-only** , not editable.
+* [X] Keep **PDF view/download** available for archived NCRs.
+* [X] Allow text-based NCR preview even when archived.
+
+Notes after meeting on 11-12
+
+* [ ] Don't mark the entire NCR as completed, but instead mark as section completed and ready for next worker, disabling the complete section and enable the next
+* [ ] When a section is completed, add a confirmation modal that displays all inputted information
+* [ ] Add a column to display what worker needs to add to the ncr next
+* [ ] PDF option should only be present when a NCR record is fully complet, when user click Mark As Completed
