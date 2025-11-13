@@ -207,16 +207,184 @@ function closeUnarchiveModal() {
   if (modal) { modal.style.display = "none"; modal.setAttribute("aria-hidden", "true"); }
 }
 
-// PDF modal 
-function downloadPDF(ncrNumber) {
-  const modal = document.getElementById("pdf-modal");
-  const num = document.getElementById("pdf-ncr-number");
-  if (num) num.textContent = ncrNumber;
-  if (modal) { modal.style.display = "block"; modal.setAttribute("aria-hidden", "false"); }
+// PDF View - Helper functions to get display text for dropdown values
+function getSupplierText(value) {
+  const suppliers = {
+    "1": "ABC Supplier",
+    "2": "XYZ Corp"
+  };
+  return suppliers[value] || value || "N/A";
 }
-function closePDFModal() {
-  const modal = document.getElementById("pdf-modal");
-  if (modal) { modal.style.display = "none"; modal.setAttribute("aria-hidden", "true"); }
+
+function getProcessTypeText(value) {
+  const processTypes = {
+    "1": "Inspection",
+    "2": "Packaging"
+  };
+  return processTypes[value] || value || "N/A";
+}
+
+function getProductText(value) {
+  const products = {
+    "1": "Product A",
+    "2": "Product B"
+  };
+  return products[value] || value || "N/A";
+}
+
+function getIssueCategoryText(value) {
+  const categories = {
+    "1": "Quality Issue",
+    "2": "Packaging Issue",
+    "3": "Documentation Issue"
+  };
+  return categories[value] || value || "N/A";
+}
+
+function formatProcessApplicable(values) {
+  if (!values || !Array.isArray(values) || values.length === 0) return "N/A";
+  
+  const labels = {
+    "supplier-rec-insp": "Supplier or Rec-Insp",
+    "wip-production": "WIP Production"
+  };
+  
+  return values.map(v => labels[v] || v).join(", ");
+}
+
+// PDF View Modal
+function downloadPDF(ncrNumber) {
+  const detailsMap = getDetailsMap();
+  const details = detailsMap[ncrNumber];
+  
+  if (!details) {
+    alert("NCR details not found.");
+    return;
+  }
+  
+  const overlay = document.getElementById("pdf-view-overlay");
+  const content = document.getElementById("pdf-view-content");
+  
+  if (!overlay || !content) return;
+  
+  // Build the PDF-like content
+  const html = `
+    <div class="pdf-section">
+      <h3 class="pdf-section-title">NCR Information</h3>
+      <div class="pdf-field-group">
+        <div class="pdf-field">
+          <div class="pdf-field-label">NCR Number</div>
+          <div class="pdf-field-value">${details.ncrNumber || "N/A"}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Date Created</div>
+          <div class="pdf-field-value">${details.dateCreated || "N/A"}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Last Modified</div>
+          <div class="pdf-field-value">${details.lastModified || "N/A"}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Status</div>
+          <div class="pdf-field-value">${details.status || "Open"}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pdf-section">
+      <h3 class="pdf-section-title">Order Information</h3>
+      <div class="pdf-field-group">
+        <div class="pdf-field">
+          <div class="pdf-field-label">Purchase Order</div>
+          <div class="pdf-field-value ${!details.purchaseOrder ? 'empty' : ''}">${details.purchaseOrder || "Not provided"}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Sales Order</div>
+          <div class="pdf-field-value ${!details.salesOrder ? 'empty' : ''}">${details.salesOrder || "Not provided"}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pdf-section">
+      <h3 class="pdf-section-title">Supplier & Process</h3>
+      <div class="pdf-field-group">
+        <div class="pdf-field">
+          <div class="pdf-field-label">Supplier</div>
+          <div class="pdf-field-value">${details.supplierName || getSupplierText(details.supplierValue)}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Process Type</div>
+          <div class="pdf-field-value">${getProcessTypeText(details.processTypeValue)}</div>
+        </div>
+        <div class="pdf-field full-width">
+          <div class="pdf-field-label">Process Applicable</div>
+          <div class="pdf-field-value">${formatProcessApplicable(details.processApplicable)}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pdf-section">
+      <h3 class="pdf-section-title">Product Information</h3>
+      <div class="pdf-field-group">
+        <div class="pdf-field">
+          <div class="pdf-field-label">Product</div>
+          <div class="pdf-field-value">${getProductText(details.productValue)}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Received Quantity</div>
+          <div class="pdf-field-value">${details.recvQty ?? "N/A"}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Defective Quantity</div>
+          <div class="pdf-field-value">${details.defectQty ?? "N/A"}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Item Marked Nonconforming</div>
+          <div class="pdf-field-value">${details.itemNonconforming || "N/A"}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pdf-section">
+      <h3 class="pdf-section-title">Issue Details</h3>
+      <div class="pdf-field-group">
+        <div class="pdf-field">
+          <div class="pdf-field-label">Issue Category</div>
+          <div class="pdf-field-value">${getIssueCategoryText(details.issueCategoryValue)}</div>
+        </div>
+        <div class="pdf-field full-width">
+          <div class="pdf-field-label">Defect Description</div>
+          <div class="pdf-field-value multiline ${!details.defectDescription ? 'empty' : ''}">${details.defectDescription || "No description provided"}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pdf-section">
+      <h3 class="pdf-section-title">Inspection Information</h3>
+      <div class="pdf-field-group">
+        <div class="pdf-field">
+          <div class="pdf-field-label">Inspected By</div>
+          <div class="pdf-field-value">${details.inspectedBy || "N/A"}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Inspection Date</div>
+          <div class="pdf-field-value">${details.inspectedOn || "N/A"}</div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  content.innerHTML = html;
+  overlay.classList.add("active");
+  overlay.setAttribute("aria-hidden", "false");
+}
+
+function closePDFView() {
+  const overlay = document.getElementById("pdf-view-overlay");
+  if (overlay) {
+    overlay.classList.remove("active");
+    overlay.setAttribute("aria-hidden", "true");
+  }
 }
 
 // Filters 
@@ -317,14 +485,14 @@ function setupFilterEventListener() {
 function setupModalEventListeners() {
   const cancelArchive = document.getElementById("cancel-archive"); if (cancelArchive) cancelArchive.addEventListener("click", closeArchiveModal);
   const cancelUnarchive = document.getElementById("cancel-unarchive"); if (cancelUnarchive) cancelUnarchive.addEventListener("click", closeUnarchiveModal);
-  const closePDFButton = document.getElementById("close-pdf-modal"); if (closePDFButton) closePDFButton.addEventListener("click", closePDFModal);
+  const closePDFButton = document.getElementById("close-pdf-view"); if (closePDFButton) closePDFButton.addEventListener("click", closePDFView);
   window.addEventListener("click", (e) => {
     const archiveModal = document.getElementById("archive-modal");
     const unarchiveModal = document.getElementById("unarchive-modal");
-    const pdfModal = document.getElementById("pdf-modal");
+    const pdfViewOverlay = document.getElementById("pdf-view-overlay");
     if (e.target === archiveModal) closeArchiveModal();
     if (e.target === unarchiveModal) closeUnarchiveModal();
-    if (e.target === pdfModal) closePDFModal();
+    if (e.target === pdfViewOverlay) closePDFView();
   });
 }
 

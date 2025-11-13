@@ -181,18 +181,18 @@
         </div>
       </div>
 
-      <!-- PDF modal -->
-      <div id="pdf-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="pdf-modal-title" aria-describedby="pdf-modal-description">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3 id="pdf-modal-title">PDF Downloaded</h3>
+      <!-- PDF View Modal -->
+      <div id="pdf-view-overlay" class="pdf-view-overlay" role="dialog" aria-labelledby="pdf-view-title" aria-modal="true">
+        <div class="pdf-view-container">
+          <div class="pdf-view-header">
+            <h2 id="pdf-view-title" class="pdf-view-title">Non-Conformance Report</h2>
+            <button type="button" class="pdf-view-close" aria-label="Close PDF view" id="close-pdf-view">&times;</button>
           </div>
-          <div class="modal-body">
-            <p id="pdf-modal-description">NCR <strong id="pdf-ncr-number"></strong> has been downloaded successfully!</p>
-            <p class="modal-info">Check your downloads folder for the PDF file.</p>
+          <div class="pdf-view-body" id="pdf-view-content">
+            <!-- Content will be populated dynamically -->
           </div>
-          <div class="modal-footer">
-            <button type="button" id="close-pdf-modal" class="btn btn-primary">Close</button>
+          <div class="pdf-view-footer">
+            <p>NCR Management System &copy; 2025</p>
           </div>
         </div>
       </div>
