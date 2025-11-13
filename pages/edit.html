@@ -381,6 +381,23 @@
         <p>&copy; 2025 NCR Management System. All rights reserved.</p>
       </div>
     </footer>
+    
+    <!-- Preview Modal -->
+    <div id="previewModal" class="preview-modal-overlay">
+      <div class="preview-modal">
+        <div class="preview-modal-header">
+          <h2>Review Your NCR Before Completion</h2>
+        </div>
+        <div class="preview-modal-body" id="previewContent">
+          <!-- Content will be dynamically inserted here -->
+        </div>
+        <div class="preview-modal-footer">
+          <button type="button" class="btn btn-outline" id="btnKeepEditing">Keep Editing</button>
+          <button type="button" class="btn btn-success" id="btnConfirmCompletion">Confirm & Mark as Completed</button>
+        </div>
+      </div>
+    </div>
+    
     <script src="../code/edit.js"></script>
   </body>
 </html>

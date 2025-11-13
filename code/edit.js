@@ -2,6 +2,122 @@
 const STORAGE_KEY = "ncrData";      
 const DETAILS_KEY = "ncrDetails";   
 function todayISO() { return new Date().toISOString().slice(0, 10); }
+
+// Function to get text from select element
+function getSelectText(selectId) {
+  const select = document.getElementById(selectId);
+  if (!select || !select.value) return "Not specified";
+  const selectedOption = select.options[select.selectedIndex];
+  return selectedOption ? selectedOption.text : "Not specified";
+}
+
+// Function to format checkbox values
+function formatCheckboxValues(values) {
+  if (!values || values.length === 0) return "None selected";
+  if (Array.isArray(values)) {
+    return values.map(v => {
+      if (v === "yes") return "Yes";
+      if (v === "no") return "No";
+      if (v === "supplier-rec-insp") return "Supplier or Rec-Insp";
+      if (v === "wip-production") return "WIP (Production Order)";
+      return v;
+    }).join(", ");
+  }
+  if (values === "yes") return "Yes";
+  if (values === "no") return "No";
+  return values;
+}
+
+// Function to show preview modal
+function showPreviewModal(formData) {
+  const modal = document.getElementById("previewModal");
+  const content = document.getElementById("previewContent");
+  
+  const html = `
+    <div class="preview-section">
+      <h3 class="preview-section-title">NCR Header Information</h3>
+      <div class="preview-grid">
+        <div class="preview-item">
+          <div class="preview-label">NCR Number</div>
+          <div class="preview-value">${formData.ncrNumber || "Not specified"}</div>
+        </div>
+        <div class="preview-item">
+          <div class="preview-label">Created On</div>
+          <div class="preview-value">${formData.createdOn || "Not specified"}</div>
+        </div>
+        <div class="preview-item">
+          <div class="preview-label">Purchase Order #</div>
+          <div class="preview-value ${!formData.purchaseOrder ? 'empty' : ''}">${formData.purchaseOrder || "Not provided"}</div>
+        </div>
+        <div class="preview-item">
+          <div class="preview-label">Sales Order #</div>
+          <div class="preview-value ${!formData.salesOrder ? 'empty' : ''}">${formData.salesOrder || "Not provided"}</div>
+        </div>
+        <div class="preview-item">
+          <div class="preview-label">Item Marked Nonconforming</div>
+          <div class="preview-value ${!formData.itemNonconforming ? 'empty' : ''}">${formatCheckboxValues(formData.itemNonconforming)}</div>
+        </div>
+        <div class="preview-item">
+          <div class="preview-label">Supplier</div>
+          <div class="preview-value ${!formData.supplier ? 'empty' : ''}">${formData.supplier || "Not selected"}</div>
+        </div>
+        <div class="preview-item">
+          <div class="preview-label">Process Type</div>
+          <div class="preview-value ${!formData.processType ? 'empty' : ''}">${formData.processType || "Not selected"}</div>
+        </div>
+        <div class="preview-item">
+          <div class="preview-label">Process Applicable</div>
+          <div class="preview-value ${!formData.processApplicable || formData.processApplicable.length === 0 ? 'empty' : ''}">${formatCheckboxValues(formData.processApplicable)}</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="preview-section">
+      <h3 class="preview-section-title">NCR Line Item Details</h3>
+      <div class="preview-grid">
+        <div class="preview-item">
+          <div class="preview-label">Product</div>
+          <div class="preview-value ${!formData.product ? 'empty' : ''}">${formData.product || "Not selected"}</div>
+        </div>
+        <div class="preview-item">
+          <div class="preview-label">Received Quantity</div>
+          <div class="preview-value ${!formData.recvQty ? 'empty' : ''}">${formData.recvQty || "Not provided"}</div>
+        </div>
+        <div class="preview-item">
+          <div class="preview-label">Defective Quantity</div>
+          <div class="preview-value ${!formData.defectQty ? 'empty' : ''}">${formData.defectQty || "Not provided"}</div>
+        </div>
+        <div class="preview-item">
+          <div class="preview-label">Issue Category</div>
+          <div class="preview-value ${!formData.issueCategory ? 'empty' : ''}">${formData.issueCategory || "Not selected"}</div>
+        </div>
+        <div class="preview-item">
+          <div class="preview-label">Inspected By</div>
+          <div class="preview-value ${!formData.inspectedBy ? 'empty' : ''}">${formData.inspectedBy || "Not provided"}</div>
+        </div>
+        <div class="preview-item">
+          <div class="preview-label">Inspected On</div>
+          <div class="preview-value ${!formData.inspectedOn ? 'empty' : ''}">${formData.inspectedOn || "Not provided"}</div>
+        </div>
+      </div>
+      <div class="preview-item" style="margin-top: 1rem;">
+        <div class="preview-label">Defect Description</div>
+        <div class="preview-value multiline ${!formData.defectDescription ? 'empty' : ''}">${formData.defectDescription || "No description provided"}</div>
+      </div>
+    </div>
+  `;
+  
+  content.innerHTML = html;
+  modal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+// Function to hide preview modal
+function hidePreviewModal() {
+  const modal = document.getElementById("previewModal");
+  modal.classList.remove("active");
+  document.body.style.overflow = "";
+}
 function loadJSON(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
   catch { return fallback; }
@@ -351,10 +467,25 @@ document.addEventListener("DOMContentLoaded", () => {
     btnComplete.setAttribute("type","button");
     btnComplete.addEventListener("click", (e) => {
       e.preventDefault();
-      const confirmed = confirm("Are you sure you want to mark this NCR as completed?\n\nOnce completed, this form cannot be edited anymore.");
-      if (confirmed) {
-        markAsCompleted();
-      }
+      // Validate and show preview instead of immediate completion
+      validateAndShowPreview();
+    });
+  }
+  
+  // Handle Keep Editing button in preview modal
+  const btnKeepEditing = document.getElementById("btnKeepEditing");
+  if (btnKeepEditing) {
+    btnKeepEditing.addEventListener("click", () => {
+      hidePreviewModal();
+    });
+  }
+  
+  // Handle Confirm Completion button in preview modal
+  const btnConfirmCompletion = document.getElementById("btnConfirmCompletion");
+  if (btnConfirmCompletion) {
+    btnConfirmCompletion.addEventListener("click", () => {
+      hidePreviewModal();
+      markAsCompleted();
     });
   }
 
@@ -421,6 +552,109 @@ function onUpdateSubmit(e, stayHere = false) {
 // Function to mark NCR as completed
 function markAsCompleted() {
   performUpdate(true, false); // true = completed, false = don't stay
+}
+
+// Function to validate form and show preview modal
+function validateAndShowPreview() {
+  // Collect all form data first
+  const ncrNumber   = (inpNcr?.value || "").trim();
+  const dateCreated = (inpCreated?.value || todayISO());
+  const supplierVal  = selSupplier?.value || "";
+  const supplierText = selSupplier?.options[selSupplier.selectedIndex]?.text?.trim() || supplierVal;
+  const productVal   = selProduct?.value || "";
+  const productText  = getSelectText("product-id");
+  const recvQtyStr   = (inpRecvQty?.value || "").trim();
+  const defectQtyStr = (inpDefectQty?.value || "").trim();
+  const issueCatVal  = selIssue?.value || "";
+  const issueCategoryText = getSelectText("issue-cat-id");
+  const defectDesc   = (inpDefectDesc?.value || "").trim();
+  const inspectedBy  = (inpInspector?.value || "").trim();
+  const inspectedOn  = (inpInspectedOn?.value || "");
+  const poNumber     = (inpPONum?.value || "").trim();
+  const soNumber     = (inpSONum?.value || "").trim();
+  const processType  = selProcessType?.value || "";
+  const processTypeText = getSelectText("process-type-id");
+  const itemNonconforming = getSingleCheckboxValue("item-nonconforming");
+  const processApplicable = getCheckboxValues("process-applicable");
+  
+  // Clear any previous validation errors
+  clearAllValidation();
+  
+  // Run validation
+  if (poNumber === "") { 
+    showValidationError("po-number", "Purchase Order number is required.");
+    return; 
+  }
+  if (inspectedBy === "") { 
+    showValidationError("inspected-by", "Inspector ID/Name is required."); 
+    return; 
+  }
+  if (defectDesc === "") { 
+    showValidationError("defect-desc", "Defect description is required."); 
+    return; 
+  }
+  if (notChosen(supplierVal)) { 
+    showValidationError("supplier-id", "Please choose a supplier."); 
+    return; 
+  }
+  if (notChosen(productVal)) { 
+    showValidationError("product-id", "Please choose a product."); 
+    return; 
+  }
+  if (notChosen(issueCatVal)) { 
+    showValidationError("issue-cat-id", "Please choose an issue category."); 
+    return; 
+  }
+  if (notChosen(processType)) {
+    showValidationError("process-type-id", "Please choose a process type."); 
+    return;
+  }
+  
+  const recvQty   = Number(recvQtyStr);
+  const defectQty = Number(defectQtyStr);
+  if (!Number.isFinite(recvQty) || recvQty <= 0) { 
+    showValidationError("recv-qty", "Enter a valid received quantity (number > 0)."); 
+    return; 
+  }
+  if (!Number.isFinite(defectQty) || defectQty < 0) { 
+    showValidationError("defect-qty", "Enter a valid defective quantity (number ≥ 0)."); 
+    return; 
+  }
+  if (defectQty > recvQty) { 
+    showValidationError("defect-qty", "Defective quantity cannot be greater than received quantity."); 
+    return; 
+  }
+  if (!inspectedOn) { 
+    showValidationError("inspected-on", "Please select the inspection date."); 
+    return; 
+  }
+  const picked = new Date(inspectedOn);
+  const today  = new Date(); today.setHours(0,0,0,0);
+  if (picked > today) { 
+    showValidationError("inspected-on", "Inspection date cannot be in the future."); 
+    return; 
+  }
+  
+  // If validation passes, show preview modal
+  const formData = {
+    ncrNumber,
+    createdOn: dateCreated,
+    purchaseOrder: poNumber,
+    salesOrder: soNumber,
+    itemNonconforming,
+    supplier: supplierText,
+    processType: processTypeText,
+    processApplicable,
+    product: productText,
+    recvQty: recvQtyStr,
+    defectQty: defectQtyStr,
+    issueCategory: issueCategoryText,
+    defectDescription: defectDesc,
+    inspectedBy,
+    inspectedOn
+  };
+  
+  showPreviewModal(formData);
 }
 
 function performUpdate(isCompleted = false, stayHere = false) {
