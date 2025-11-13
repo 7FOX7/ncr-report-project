@@ -450,63 +450,70 @@ function performUpdate(isCompleted = false, stayHere = false) {
   // Clear any previous validation errors
   clearAllValidation();
 
-  //validations with visual feedback
-  if (poNumber === "") { 
-    showValidationError("po-number", "Purchase Order number is required.");  // Fixed ID
-    return; 
-  }
-  if (inspectedBy === "") { 
-    showValidationError("inspected-by", "Inspector ID/Name is required."); 
-    return; 
-  }
-  if (defectDesc === "") { 
-    showValidationError("defect-desc", "Defect description is required."); 
-    return; 
-  }
-  if (notChosen(supplierVal)) { 
-    showValidationError("supplier-id", "Please choose a supplier."); 
-    return; 
-  }
-  if (notChosen(productVal)) { 
-    showValidationError("product-id", "Please choose a product."); 
-    return; 
-  }
-  if (notChosen(issueCatVal)) { 
-    showValidationError("issue-cat-id", "Please choose an issue category."); 
-    return; 
+  // Only validate when marking as completed
+  if (isCompleted) {
+    //validations with visual feedback
+    if (poNumber === "") { 
+      showValidationError("po-number", "Purchase Order number is required.");  // Fixed ID
+      return; 
+    }
+    if (inspectedBy === "") { 
+      showValidationError("inspected-by", "Inspector ID/Name is required."); 
+      return; 
+    }
+    if (defectDesc === "") { 
+      showValidationError("defect-desc", "Defect description is required."); 
+      return; 
+    }
+    if (notChosen(supplierVal)) { 
+      showValidationError("supplier-id", "Please choose a supplier."); 
+      return; 
+    }
+    if (notChosen(productVal)) { 
+      showValidationError("product-id", "Please choose a product."); 
+      return; 
+    }
+    if (notChosen(issueCatVal)) { 
+      showValidationError("issue-cat-id", "Please choose an issue category."); 
+      return; 
+    }
+    
+    if (notChosen(processType)) {
+      showValidationError("process-type-id", "Please choose a process type."); 
+      return;
+    }
+
+    const recvQty   = Number(recvQtyStr);
+    const defectQty = Number(defectQtyStr);
+    if (!Number.isFinite(recvQty) || recvQty <= 0) { 
+      showValidationError("recv-qty", "Enter a valid received quantity (number > 0)."); 
+      return; 
+    }
+    if (!Number.isFinite(defectQty) || defectQty < 0) { 
+      showValidationError("defect-qty", "Enter a valid defective quantity (number ≥ 0)."); 
+      return; 
+    }
+    //defective cannot exceed received
+    if (defectQty > recvQty) { 
+      showValidationError("defect-qty", "Defective quantity cannot be greater than received quantity."); 
+      return; 
+    }
+
+    if (!inspectedOn) { 
+      showValidationError("inspected-on", "Please select the inspection date."); 
+      return; 
+    }
+    const picked = new Date(inspectedOn);
+    const today  = new Date(); today.setHours(0,0,0,0);
+    if (picked > today) { 
+      showValidationError("inspected-on", "Inspection date cannot be in the future."); 
+      return; 
+    }
   }
   
-  if (notChosen(processType)) {
-    showValidationError("process-type-id", "Please choose a process type."); 
-    return;
-  }
-
+  // Convert string values to numbers for storage (even if not validating)
   const recvQty   = Number(recvQtyStr);
   const defectQty = Number(defectQtyStr);
-  if (!Number.isFinite(recvQty) || recvQty <= 0) { 
-    showValidationError("recv-qty", "Enter a valid received quantity (number > 0)."); 
-    return; 
-  }
-  if (!Number.isFinite(defectQty) || defectQty < 0) { 
-    showValidationError("defect-qty", "Enter a valid defective quantity (number ≥ 0)."); 
-    return; 
-  }
-  //defective cannot exceed received
-  if (defectQty > recvQty) { 
-    showValidationError("defect-qty", "Defective quantity cannot be greater than received quantity."); 
-    return; 
-  }
-
-  if (!inspectedOn) { 
-    showValidationError("inspected-on", "Please select the inspection date."); 
-    return; 
-  }
-  const picked = new Date(inspectedOn);
-  const today  = new Date(); today.setHours(0,0,0,0);
-  if (picked > today) { 
-    showValidationError("inspected-on", "Inspection date cannot be in the future."); 
-    return; 
-  }
 
   const lastModified = todayISO();
 

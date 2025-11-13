@@ -253,66 +253,73 @@ document.addEventListener("DOMContentLoaded", () => {
       // Clear any previous validation errors
       clearAllValidation();
 
-      // validations with visual feedback
-      if (purchaseOrder === "") { 
-        showValidationError("po-number", "Purchase Order number is required."); 
-        return; 
-      }
-      if (inspectorID === "") { 
-        showValidationError("inspected-by", "Inspector ID/Name is required."); 
-        return; 
-      }
-      if (defectDescription === "") { 
-        showValidationError("defect-desc", "Defect description is required."); 
-        return; 
-      }
+      // Only validate when marking as completed
+      if (isCompleted) {
+        // validations with visual feedback
+        if (purchaseOrder === "") { 
+          showValidationError("po-number", "Purchase Order number is required."); 
+          return; 
+        }
+        if (inspectorID === "") { 
+          showValidationError("inspected-by", "Inspector ID/Name is required."); 
+          return; 
+        }
+        if (defectDescription === "") { 
+          showValidationError("defect-desc", "Defect description is required."); 
+          return; 
+        }
 
-      const notChosen = (v) => v === "" || v === "0" || (typeof v === "string" && v.toLowerCase() === "select");
-      if (notChosen(supplierChoice)) { 
-        showValidationError("supplier-id", "Please choose a supplier."); 
-        return; 
-      }
-      if (notChosen(product)) { 
-        showValidationError("product-id", "Please choose a product."); 
-        return; 
-      }
-      if (notChosen(issueCategory)) { 
-        showValidationError("issue-cat-id", "Please choose an issue category."); 
-        return; 
+        const notChosen = (v) => v === "" || v === "0" || (typeof v === "string" && v.toLowerCase() === "select");
+        if (notChosen(supplierChoice)) { 
+          showValidationError("supplier-id", "Please choose a supplier."); 
+          return; 
+        }
+        if (notChosen(product)) { 
+          showValidationError("product-id", "Please choose a product."); 
+          return; 
+        }
+        if (notChosen(issueCategory)) { 
+          showValidationError("issue-cat-id", "Please choose an issue category."); 
+          return; 
+        }
+        
+        if (document.getElementById("process-type-id") && notChosen(processType)) {
+          showValidationError("process-type-id", "Please choose a process type."); 
+          return;
+        }
+
+        const recvdQty  = Number(recvdQtyStr);
+        const defectQty = Number(defectQtyStr);
+        if (!Number.isFinite(recvdQty) || recvdQty <= 0) { 
+          showValidationError("recv-qty", "Enter a valid received quantity (number > 0)."); 
+          return; 
+        }
+        if (!Number.isFinite(defectQty) || defectQty < 0) { 
+          showValidationError("defect-qty", "Enter a valid defective quantity (number ≥ 0)."); 
+          return; 
+        }
+        //defective cannot exceed received
+        if (defectQty > recvdQty) {
+          showValidationError("defect-qty", "Defective quantity cannot be greater than received quantity.");
+          return;
+        }
+
+        if (!dateInspectedVal) { 
+          showValidationError("inspected-on", "Please select the inspection date."); 
+          return; 
+        }
+        //parse as local date
+        const picked = parseLocalDate(dateInspectedVal);
+        const today  = new Date(); today.setHours(0,0,0,0);
+        if (picked < today) {
+          showValidationError("inspected-on", "Inspection date cannot be earlier than today.");
+          return;
+        }
       }
       
-      if (document.getElementById("process-type-id") && notChosen(processType)) {
-        showValidationError("process-type-id", "Please choose a process type."); 
-        return;
-      }
-
+      // Convert string values to numbers for storage (even if not validating)
       const recvdQty  = Number(recvdQtyStr);
       const defectQty = Number(defectQtyStr);
-      if (!Number.isFinite(recvdQty) || recvdQty <= 0) { 
-        showValidationError("recv-qty", "Enter a valid received quantity (number > 0)."); 
-        return; 
-      }
-      if (!Number.isFinite(defectQty) || defectQty < 0) { 
-        showValidationError("defect-qty", "Enter a valid defective quantity (number ≥ 0)."); 
-        return; 
-      }
-      //defective cannot exceed received
-      if (defectQty > recvdQty) {
-        showValidationError("defect-qty", "Defective quantity cannot be greater than received quantity.");
-        return;
-      }
-
-      if (!dateInspectedVal) { 
-        showValidationError("inspected-on", "Please select the inspection date."); 
-        return; 
-      }
-      //parse as local date
-      const picked = parseLocalDate(dateInspectedVal);
-      const today  = new Date(); today.setHours(0,0,0,0);
-      if (picked < today) {
-        showValidationError("inspected-on", "Inspection date cannot be earlier than today.");
-        return;
-      }
 
       //persist BOTH the table row  and the full details 
       const ncrNumber = ncrInput ? ncrInput.value : generateNcrNumber();
