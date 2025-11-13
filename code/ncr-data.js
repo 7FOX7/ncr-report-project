@@ -120,11 +120,14 @@ function renderNCRTable(page = 1) {
       `;
     }
 
-    actionsHtml += `
-      <button type="button" class="btn btn-outline"
-        aria-label="Download ${ncr.ncrNumber} as PDF"
-        onclick="downloadPDF('${ncr.ncrNumber}')">PDF</button>
-    `;
+    // PDF button: only show for completed NCRs
+    if (isCompleted) {
+      actionsHtml += `
+        <button type="button" class="btn btn-outline"
+          aria-label="Download ${ncr.ncrNumber} as PDF"
+          onclick="downloadPDF('${ncr.ncrNumber}')">PDF</button>
+      `;
+    }
 
     row.innerHTML = `
       <td data-label="NCR Number">
