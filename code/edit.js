@@ -47,11 +47,9 @@ function showPreviewModal(formData, includeEngineering) {
   const engExtraFlags = [];
   if (eng.drawingReqUpd) engExtraFlags.push("Drawing Update Required");
 
-  // engineering section only when includeEngineering === true (engineering stage)
   let engineeringHtml = "";
   if (includeEngineering) {
     engineeringHtml = `
-      <!-- Engineering Disposition Preview -->
       <div class="preview-section">
         <h3 class="preview-section-title">Engineering Disposition &amp; Actions</h3>
         <div class="preview-grid">
@@ -224,8 +222,10 @@ function showPreviewModal(formData, includeEngineering) {
 
 function hidePreviewModal() {
   const modal = document.getElementById("previewModal");
-  modal.classList.remove("active");
-  document.body.style.overflow = "";
+  if (modal) {
+    modal.classList.remove("active");
+    document.body.style.overflow = "";
+  }
 }
 
 /* ---------------- Basic storage helpers (this file) ---------------- */
@@ -293,9 +293,8 @@ function writeEngineeringToForm(eng) {
   set("eng-submittedDate",   eng.submittedDate ?? "");
 }
 
-/* ---------------------- WORKFLOW HELPERS (same idea as index) ---------------------- */
+/* ---------------------- WORKFLOW HELPERS ---------------------- */
 
-// Optional: keep this if you want to check completeness; not used for stage.
 function isQualitySectionComplete(details) {
   if (!details) return false;
 
@@ -372,10 +371,11 @@ function getWorkflowInfo(details) {
 
 function hideEngineeringSectionForQuality() {
   const engSection = document.getElementById("engineering-section");
-  if (engSection) {
-    engSection.style.display = "none";
-    engSection.setAttribute("aria-hidden", "true");
-  }
+  if (!engSection) return;
+
+  const wrapper = engSection.closest(".collapsible-fieldset") || engSection;
+  wrapper.style.display = "none";
+  wrapper.setAttribute("aria-hidden", "true");
 }
 
 function enableEngineeringOnly() {
@@ -383,8 +383,9 @@ function enableEngineeringOnly() {
   const form = document.getElementById("ncr-edit-form") || document.querySelector("form");
   if (!engSection || !form) return;
 
-  engSection.style.display = "";
-  engSection.removeAttribute("aria-hidden");
+  const wrapper = engSection.closest(".collapsible-fieldset") || engSection;
+  wrapper.style.display = "";
+  wrapper.removeAttribute("aria-hidden");
 
   const isAccordionToggle = (el) =>
     el.classList && el.classList.contains("fieldset-toggle");
@@ -393,14 +394,12 @@ function enableEngineeringOnly() {
     const inEngineering = engSection.contains(el);
     const toggle = isAccordionToggle(el);
 
-    // Keep accordion toggles working
     if (toggle) {
       el.disabled = false;
       return;
     }
 
     if (inEngineering) {
-      // Engineering inputs remain editable
       if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
         el.readOnly = false;
       }
@@ -408,7 +407,6 @@ function enableEngineeringOnly() {
         el.disabled = false;
       }
     } else {
-      // Inspector area is read-only for engineer
       if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
         el.readOnly = true;
       }
@@ -490,9 +488,10 @@ function clearAllValidation() {
   });
 }
 
-// Function to mark required fields
+// Mark inspector + engineering required fields
 function markRequiredFields() {
   const requiredFieldIds = [
+    // Inspector
     'po-number',
     'inspected-by',
     'defect-desc',
@@ -502,7 +501,14 @@ function markRequiredFields() {
     'recv-qty',
     'defect-qty',
     'inspected-on',
-    'process-type-id'
+    'process-type-id',
+    // Engineering
+    'eng-disposition',
+    'eng-nameOfEng',
+    'eng-origRevNum',
+    'eng-UpdatedRev',
+    'eng-RevisionDate',
+    'eng-submittedDate'
   ];
   
   requiredFieldIds.forEach(fieldId => {
@@ -516,6 +522,15 @@ function markRequiredFields() {
       }
     }
   });
+
+  const engAction = document.getElementById('eng-useAsIs');
+  if (engAction) {
+    const formGroup = engAction.closest('.form-group');
+    if (formGroup) {
+      formGroup.classList.add('required');
+      engAction.setAttribute('aria-required', 'true');
+    }
+  }
   
   const form = document.getElementById('ncr-edit-form') || document.querySelector('form');
   if (form && !form.querySelector('.required-fields-legend')) {
@@ -548,11 +563,11 @@ const inpPONum       = document.getElementById("po-number");
 const inpSONum       = document.getElementById("so-number");
 const selProcessType = document.getElementById("process-type-id");
 
-//baseline snapshot for Reset 
+// baseline snapshot for Reset 
 let baselineDetails = null;  
 let baselineRow     = null;  
 
-//set select by visible text or create a temp option
+// set select by visible text or create a temp option
 function setSelectByText(selectEl, text) {
   if (!selectEl || !text) return;
   let matched = false;
@@ -566,7 +581,7 @@ function setSelectByText(selectEl, text) {
   }
 }
 
-//fill all fields from details row
+// fill all fields from details row
 function fillFormFrom(details, row) {
   if (inpCreated) {
     inpCreated.value = (details?.dateCreated || row?.dateCreated || urlCreated || todayISO());
@@ -603,7 +618,7 @@ function fillFormFrom(details, row) {
   }
 }
 
-//prefill on load
+// prefill on load
 document.addEventListener("DOMContentLoaded", () => {
   markRequiredFields();
   
@@ -641,7 +656,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   fillFormFrom(details, row);
 
-  // Determine current workflow stage from saved details
   const wfInfo = getWorkflowInfo(details);
   currentStage = wfInfo.stage || "quality";
 
@@ -691,7 +705,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-//  restore last saved state from storage 
+// restore last saved state from storage 
 function onResetClick(e) {
   if (e) e.preventDefault();
 
@@ -702,6 +716,12 @@ function onResetClick(e) {
   const latestRow  = latestList.find(r => String(r.ncrNumber) === String(ncrNumberParam)) || baselineRow;
 
   fillFormFrom(latestDetails, latestRow);
+
+  if (currentStage === "quality") {
+    hideEngineeringSectionForQuality();
+  } else if (currentStage === "engineering") {
+    enableEngineeringOnly();
+  }
 }
 
 // Function to disable form editing for completed NCRs
@@ -711,12 +731,12 @@ function disableFormForCompletedNCR() {
 
   const formElements = form.querySelectorAll('input, select, textarea, button');
   formElements.forEach(element => {
-    if (element.type !== 'radio') { // Don't disable accordion toggles
+    if (element.type !== 'radio') {
       element.disabled = true;
     }
   });
   
-  if (form && !form.querySelector('.completion-status')) {
+  if (!form.querySelector('.completion-status')) {
     const statusDiv = document.createElement('div');
     statusDiv.className = 'completion-status alert alert-success';
     statusDiv.innerHTML = '✓ This NCR has been marked as completed and cannot be edited.';
@@ -729,11 +749,11 @@ function disableFormForCompletedNCR() {
   }
 }
 
-//Validate + Save 
+// Validate + Save 
 function onUpdateSubmit(e, stayHere = false) {
   e.preventDefault();
-  completingFromButton = false;        // normal save
-  performUpdate(false, stayHere);      // normal update
+  completingFromButton = false;
+  performUpdate(false, stayHere);
 }
 
 // When user confirms completion from the preview modal
@@ -742,9 +762,9 @@ function onUpdateSubmit(e, stayHere = false) {
 function markAsCompleted() {
   completingFromButton = true;
   if (currentStage === "engineering") {
-    performUpdate(true, false);   // final completion
+    performUpdate(true, false);
   } else {
-    performUpdate(false, false);  // just inspector completion
+    performUpdate(false, false);
   }
   completingFromButton = false;
 }
@@ -852,10 +872,31 @@ function validateAndShowPreview() {
   showPreviewModal(formData, includeEngineering);
 }
 
+// Main save/update function
 function performUpdate(isCompleted = false, stayHere = false) {
+  const ncrNumber = (inpNcr?.value || "").trim();
+  if (!ncrNumber) {
+    alert("NCR number is missing.");
+    return;
+  }
 
-  const ncrNumber   = (inpNcr?.value || "").trim();
-  const dateCreated = (inpCreated?.value || todayISO());
+  // Load existing storage first so we can preserve original dateCreated
+  const detailsMap = loadJSON(DETAILS_KEY, {});
+  const existing   = detailsMap[ncrNumber] || {};
+
+  const list   = loadJSON(STORAGE_KEY, []);
+  const idx    = list.findIndex(r => String(r.ncrNumber) === String(ncrNumber));
+  const row    = idx >= 0 ? list[idx] : null;
+
+  const inputCreated = (inpCreated?.value || "").trim();
+
+  // Preserve original creation date if it exists anywhere
+  const dateCreated =
+    existing.dateCreated ||
+    (row && row.dateCreated) ||
+    inputCreated ||
+    urlCreated ||
+    todayISO();
 
   const supplierVal  = selSupplier?.value || "";
   const supplierText = selSupplier?.options[selSupplier.selectedIndex]?.text?.trim() || supplierVal;
@@ -877,7 +918,7 @@ function performUpdate(isCompleted = false, stayHere = false) {
 
   clearAllValidation();
 
-  // Only re-run full validation when marking the WHOLE NCR as completed
+  // Full inspector validation only when finalizing NCR (engineering completion)
   if (isCompleted) {
     if (poNumber === "") { 
       showValidationError("po-number", "Purchase Order number is required.");
@@ -941,10 +982,62 @@ function performUpdate(isCompleted = false, stayHere = false) {
 
   const lastModified = todayISO();
 
-  const detailsMap = loadJSON(DETAILS_KEY, {});
-  const existing   = detailsMap[ncrNumber] || {};
+  // -------- ENGINEERING SAVE BLOCK --------
+  const engineering = readEngineeringFromForm();
+  const anyEngChoice =
+    engineering.useAsIs || engineering.repair || engineering.rework ||
+    engineering.scrap || engineering.custNotifNCR || engineering.drawingReqUpd;
 
-  detailsMap[ncrNumber] = {
+  // Final completion from engineering stage
+  if (isCompleted && currentStage === "engineering") {
+    if (!anyEngChoice) {
+      showValidationError("eng-useAsIs", "Select at least one engineering action.");
+      return;
+    }
+    if (!engineering.disposition) {
+      showValidationError("eng-disposition", "Disposition notes are required.");
+      return;
+    }
+    if (!engineering.nameOfEng) {
+      showValidationError("eng-nameOfEng", "Engineer name is required.");
+      return;
+    }
+    if (!engineering.origRevNum) {
+      showValidationError("eng-origRevNum", "Original revision number is required.");
+      return;
+    }
+    if (!engineering.UpdatedRev) {
+      showValidationError("eng-UpdatedRev", "Updated revision is required.");
+      return;
+    }
+    if (!engineering.RevisionDate) {
+      showValidationError("eng-RevisionDate", "Revision date is required.");
+      return;
+    }
+    if (!engineering.submittedDate) {
+      showValidationError("eng-submittedDate", "Submitted date is required.");
+      return;
+    }
+  } else if (anyEngChoice) {
+    // For regular save (not final completion), still require basic info if actions selected
+    if (!engineering.nameOfEng) {
+      showValidationError("eng-nameOfEng", "Engineer name is required when a disposition is selected.");
+      return;
+    }
+    if (!engineering.disposition) {
+      showValidationError("eng-disposition", "Please provide disposition notes.");
+      return;
+    }
+  }
+
+  // Determine final completion flag:
+  // - once completed, stays completed
+  // - can only become completed from Engineering stage
+  const finalIsCompleted =
+    existing.isCompleted === true ||
+    (currentStage === "engineering" && isCompleted === true);
+
+  const updatedDetails = {
     ...existing,
     ncrNumber,
     dateCreated,
@@ -962,67 +1055,43 @@ function performUpdate(isCompleted = false, stayHere = false) {
     inspectedBy,
     inspectedOn,
     status: statusVal,
-    isCompleted: isCompleted,
-    itemNonconforming: itemNonconforming,
-    processApplicable: processApplicable
+    isCompleted: finalIsCompleted,
+    itemNonconforming,
+    processApplicable,
+    engineering
   };
 
-  // -------- ENGINEERING SAVE BLOCK --------
-  const engineering = readEngineeringFromForm();
-
-  const anyEngChoice = engineering.useAsIs || engineering.repair || engineering.rework ||
-                       engineering.scrap || engineering.custNotifNCR || engineering.drawingReqUpd;
-
-  if (anyEngChoice) {
-    if (!engineering.nameOfEng) {
-      showValidationError("eng-nameOfEng", "Engineer name is required when a disposition is selected.");
-      return;
-    }
-    if (!engineering.disposition) {
-      showValidationError("eng-disposition", "Please provide disposition notes.");
-      return;
-    }
+  // Only set qualityCompleted when inspector uses Mark as Completed in quality stage
+  if (completingFromButton && currentStage === "quality") {
+    updatedDetails.qualityCompleted = true;
   }
 
-  detailsMap[ncrNumber].engineering = engineering;
-
-  // When Mark As Completed button is used (inspector or engineer),
-  // record that the quality portion has been completed.
-  if (completingFromButton) {
-    detailsMap[ncrNumber].qualityCompleted = true;
-  }
-  // ----------------------------------------
-
+  detailsMap[ncrNumber] = updatedDetails;
   saveJSON(DETAILS_KEY, detailsMap);
 
-  const list = loadJSON(STORAGE_KEY, []);
-  const idx  = list.findIndex(r => String(r.ncrNumber) === String(ncrNumber));
+  const updatedRow = {
+    ...(row || {
+      id: row?.id || Date.now(),
+      ncrNumber
+    }),
+    dateCreated,
+    lastModified,
+    supplier: supplierText,
+    status: statusVal,
+    isCompleted: finalIsCompleted
+  };
+
   if (idx >= 0) {
-    list[idx] = {
-      ...list[idx],
-      dateCreated,
-      lastModified,
-      supplier: supplierText,
-      status: statusVal,
-      isCompleted: isCompleted
-    };
+    list[idx] = updatedRow;
   } else {
-    list.push({
-      id: Date.now(),
-      ncrNumber,
-      dateCreated,
-      lastModified,
-      supplier: supplierText,
-      status: statusVal,
-      isCompleted: isCompleted
-    });
+    list.push(updatedRow);
   }
   saveJSON(STORAGE_KEY, list);
 
-  baselineDetails = deepClone(detailsMap[ncrNumber]);
-  baselineRow     = deepClone(list.find(r => String(r.ncrNumber) === String(ncrNumber)));
+  baselineDetails = deepClone(updatedDetails);
+  baselineRow     = deepClone(updatedRow);
 
-  if (isCompleted) {
+  if (finalIsCompleted) {
     alert("NCR has been marked as completed. This form can no longer be edited.");
   } else if (completingFromButton && currentStage === "quality") {
     alert("Inspector section has been completed. Engineering can now work on this NCR.");
@@ -1030,5 +1099,7 @@ function performUpdate(isCompleted = false, stayHere = false) {
     alert("NCR updated.");
   }
   
-  if (!stayHere) window.location.href = "index.html";
+  if (!stayHere) {
+    window.location.href = "index.html";
+  }
 }

@@ -23,21 +23,45 @@ function loadJSON(key, fallback) {
 }
 
 // ------------------------
+// Details map
+// ------------------------
+function getDetailsMap() {
+  // { [ncrNumber]: { ... } }
+  return loadJSON("ncrDetails", {});
+}
+
+// ------------------------
 // Merge NEW rows from Create
 // ------------------------
 function mergeIncomingRecords() {
   const incoming = loadJSON("ncrNewRecords", []);
   if (!Array.isArray(incoming) || incoming.length === 0) return;
 
+  const detailsMap = getDetailsMap();
+
   const seen = new Set(ncrData.map(r => r.ncrNumber));
   let maxId = ncrData.reduce((m, r) => Math.max(m, Number(r.id) || 0), 0);
 
   incoming.forEach(r => {
     if (!seen.has(r.ncrNumber)) {
+      // Ensure id
       if (typeof r.id !== "number" || !Number.isFinite(r.id)) {
         maxId += 1;
         r.id = maxId;
       }
+
+      // Try to fill in dates and supplier from details map if missing
+      const d = detailsMap[r.ncrNumber] || {};
+      if (!r.dateCreated) {
+        r.dateCreated = d.dateCreated || d.lastModified || r.dateCreated || "";
+      }
+      if (!r.lastModified) {
+        r.lastModified = d.lastModified || d.dateCreated || r.dateCreated || "";
+      }
+      if (!r.supplier && d.supplierName) {
+        r.supplier = d.supplierName;
+      }
+
       ncrData.push(r);
       seen.add(r.ncrNumber);
     }
@@ -63,16 +87,7 @@ function applyEdits() {
 }
 
 // ------------------------
-// Details map
-// ------------------------
-function getDetailsMap() {
-  // { [ncrNumber]: { ... } }
-  return loadJSON("ncrDetails", {});
-}
-
-// ------------------------
 // Optional helper: checks if inspector section is filled
-// (not used for stage anymore, but kept if needed later).
 // ------------------------
 function isQualitySectionComplete(details) {
   if (!details) return false;
@@ -669,6 +684,36 @@ function filterNCRData(page = 1) {
 
     if (!workflowFilter) return true; // all stages
     return wfInfo.stage === workflowFilter;
+  });
+
+  // Sort by dateCreated (newest), then lastModified, then id (newest)
+  const getDatesFor = (record) => {
+    const d = detailsMap[record.ncrNumber] || {};
+    const dateCreated = d.dateCreated || record.dateCreated || "";
+    const lastModified = d.lastModified || record.lastModified || dateCreated;
+    return { dateCreated, lastModified };
+  };
+
+  ncrFilteredData.sort((a, b) => {
+    const da = getDatesFor(a);
+    const db = getDatesFor(b);
+
+    const tCreatedA = da.dateCreated ? Date.parse(da.dateCreated) : 0;
+    const tCreatedB = db.dateCreated ? Date.parse(db.dateCreated) : 0;
+
+    // 1) Newest CREATED first
+    if (tCreatedB !== tCreatedA) return tCreatedB - tCreatedA;
+
+    const tModA = da.lastModified ? Date.parse(da.lastModified) : 0;
+    const tModB = db.lastModified ? Date.parse(db.lastModified) : 0;
+
+    // 2) Tie-breaker: newest LAST MODIFIED first
+    if (tModB !== tModA) return tModB - tModA;
+
+    // 3) Final tie-breaker: highest ID is newest
+    const idA = typeof a.id === "number" ? a.id : 0;
+    const idB = typeof b.id === "number" ? b.id : 0;
+    return idB - idA;
   });
 
   renderNCRTable(page);
