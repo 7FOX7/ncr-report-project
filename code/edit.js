@@ -1,7 +1,11 @@
-//helpers 
-const STORAGE_KEY = "ncrData";      
-const DETAILS_KEY = "ncrDetails";   
+// ---------------- Helpers & constants ----------------
+const STORAGE_KEY = "ncrData";
+const DETAILS_KEY = "ncrDetails";
 function todayISO() { return new Date().toISOString().slice(0, 10); }
+
+// Global workflow state + flag to know we're completing via the button
+let currentStage = "quality";      // "quality" | "engineering" | "completed"
+let completingFromButton = false;  // used to set qualityCompleted flag
 
 // Function to get text from select element
 function getSelectText(selectId) {
@@ -28,12 +32,11 @@ function formatCheckboxValues(values) {
   return values;
 }
 
-// Function to show preview modal
-function showPreviewModal(formData) {
+// ---------------- Preview modal ----------------
+function showPreviewModal(formData, includeEngineering) {
   const modal = document.getElementById("previewModal");
   const content = document.getElementById("previewContent");
 
-  // -------------------- Engineering preview helpers (ADDED) --------------------
   const eng = formData.engineering || {};
   const engActions = [];
   if (eng.useAsIs)  engActions.push("Use as-is");
@@ -43,7 +46,74 @@ function showPreviewModal(formData) {
   if (eng.custNotifNCR) engActions.push("Customer Notified");
   const engExtraFlags = [];
   if (eng.drawingReqUpd) engExtraFlags.push("Drawing Update Required");
-  // ------------------ End engineering preview helpers (ADDED) ------------------
+
+  // engineering section only when includeEngineering === true (engineering stage)
+  let engineeringHtml = "";
+  if (includeEngineering) {
+    engineeringHtml = `
+      <!-- Engineering Disposition Preview -->
+      <div class="preview-section">
+        <h3 class="preview-section-title">Engineering Disposition &amp; Actions</h3>
+        <div class="preview-grid">
+          <div class="preview-item">
+            <div class="preview-label">Disposition Choices</div>
+            <div class="preview-value ${engActions.length === 0 ? 'empty' : ''}">
+              ${engActions.length ? engActions.join(", ") : "No disposition selected"}
+            </div>
+          </div>
+
+          <div class="preview-item">
+            <div class="preview-label">Disposition Notes</div>
+            <div class="preview-value multiline ${!eng.disposition ? 'empty' : ''}">
+              ${eng.disposition || "No notes provided"}
+            </div>
+          </div>
+
+          <div class="preview-item">
+            <div class="preview-label">Engineer Name</div>
+            <div class="preview-value ${!eng.nameOfEng ? 'empty' : ''}">
+              ${eng.nameOfEng || "Not provided"}
+            </div>
+          </div>
+
+          <div class="preview-item">
+            <div class="preview-label">Original Rev #</div>
+            <div class="preview-value ${!eng.origRevNum ? 'empty' : ''}">
+              ${eng.origRevNum || "Not provided"}
+            </div>
+          </div>
+
+          <div class="preview-item">
+            <div class="preview-label">Updated Revision (Date/Time)</div>
+            <div class="preview-value ${!eng.UpdatedRev ? 'empty' : ''}">
+              ${eng.UpdatedRev || "Not provided"}
+            </div>
+          </div>
+
+          <div class="preview-item">
+            <div class="preview-label">Revision Date</div>
+            <div class="preview-value ${!eng.RevisionDate ? 'empty' : ''}">
+              ${eng.RevisionDate || "Not provided"}
+            </div>
+          </div>
+
+          <div class="preview-item">
+            <div class="preview-label">Submitted Date</div>
+            <div class="preview-value ${!eng.submittedDate ? 'empty' : ''}">
+              ${eng.submittedDate || "Not provided"}
+            </div>
+          </div>
+
+          <div class="preview-item">
+            <div class="preview-label">Drawing / Extra Actions</div>
+            <div class="preview-value ${(engExtraFlags.length === 0) ? 'empty' : ''}">
+              ${engExtraFlags.length ? engExtraFlags.join(", ") : "No additional actions"}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
 
   const html = `
     <div class="preview-section">
@@ -59,27 +129,39 @@ function showPreviewModal(formData) {
         </div>
         <div class="preview-item">
           <div class="preview-label">Purchase Order #</div>
-          <div class="preview-value ${!formData.purchaseOrder ? 'empty' : ''}">${formData.purchaseOrder || "Not provided"}</div>
+          <div class="preview-value ${!formData.purchaseOrder ? 'empty' : ''}">
+            ${formData.purchaseOrder || "Not provided"}
+          </div>
         </div>
         <div class="preview-item">
           <div class="preview-label">Sales Order #</div>
-          <div class="preview-value ${!formData.salesOrder ? 'empty' : ''}">${formData.salesOrder || "Not provided"}</div>
+          <div class="preview-value ${!formData.salesOrder ? 'empty' : ''}">
+            ${formData.salesOrder || "Not provided"}
+          </div>
         </div>
         <div class="preview-item">
           <div class="preview-label">Item Marked Nonconforming</div>
-          <div class="preview-value ${!formData.itemNonconforming ? 'empty' : ''}">${formatCheckboxValues(formData.itemNonconforming)}</div>
+          <div class="preview-value ${!formData.itemNonconforming ? 'empty' : ''}">
+            ${formatCheckboxValues(formData.itemNonconforming)}
+          </div>
         </div>
         <div class="preview-item">
           <div class="preview-label">Supplier</div>
-          <div class="preview-value ${!formData.supplier ? 'empty' : ''}">${formData.supplier || "Not selected"}</div>
+          <div class="preview-value ${!formData.supplier ? 'empty' : ''}">
+            ${formData.supplier || "Not selected"}
+          </div>
         </div>
         <div class="preview-item">
           <div class="preview-label">Process Type</div>
-          <div class="preview-value ${!formData.processType ? 'empty' : ''}">${formData.processType || "Not selected"}</div>
+          <div class="preview-value ${!formData.processType ? 'empty' : ''}">
+            ${formData.processType || "Not selected"}
+          </div>
         </div>
         <div class="preview-item">
           <div class="preview-label">Process Applicable</div>
-          <div class="preview-value ${!formData.processApplicable || formData.processApplicable.length === 0 ? 'empty' : ''}">${formatCheckboxValues(formData.processApplicable)}</div>
+          <div class="preview-value ${!formData.processApplicable || formData.processApplicable.length === 0 ? 'empty' : ''}">
+            ${formatCheckboxValues(formData.processApplicable)}
+          </div>
         </div>
       </div>
     </div>
@@ -89,97 +171,50 @@ function showPreviewModal(formData) {
       <div class="preview-grid">
         <div class="preview-item">
           <div class="preview-label">Product</div>
-          <div class="preview-value ${!formData.product ? 'empty' : ''}">${formData.product || "Not selected"}</div>
+          <div class="preview-value ${!formData.product ? 'empty' : ''}">
+            ${formData.product || "Not selected"}
+          </div>
         </div>
         <div class="preview-item">
           <div class="preview-label">Received Quantity</div>
-          <div class="preview-value ${!formData.recvQty ? 'empty' : ''}">${formData.recvQty || "Not provided"}</div>
+          <div class="preview-value ${!formData.recvQty ? 'empty' : ''}">
+            ${formData.recvQty || "Not provided"}
+          </div>
         </div>
         <div class="preview-item">
           <div class="preview-label">Defective Quantity</div>
-          <div class="preview-value ${!formData.defectQty ? 'empty' : ''}">${formData.defectQty || "Not provided"}</div>
+          <div class="preview-value ${!formData.defectQty ? 'empty' : ''}">
+            ${formData.defectQty || "Not provided"}
+          </div>
         </div>
         <div class="preview-item">
           <div class="preview-label">Issue Category</div>
-          <div class="preview-value ${!formData.issueCategory ? 'empty' : ''}">${formData.issueCategory || "Not selected"}</div>
+          <div class="preview-value ${!formData.issueCategory ? 'empty' : ''}">
+            ${formData.issueCategory || "Not selected"}
+          </div>
         </div>
         <div class="preview-item">
           <div class="preview-label">Inspected By</div>
-          <div class="preview-value ${!formData.inspectedBy ? 'empty' : ''}">${formData.inspectedBy || "Not provided"}</div>
+          <div class="preview-value ${!formData.inspectedBy ? 'empty' : ''}">
+            ${formData.inspectedBy || "Not provided"}
+          </div>
         </div>
         <div class="preview-item">
           <div class="preview-label">Inspected On</div>
-          <div class="preview-value ${!formData.inspectedOn ? 'empty' : ''}">${formData.inspectedOn || "Not provided"}</div>
+          <div class="preview-value ${!formData.inspectedOn ? 'empty' : ''}">
+            ${formData.inspectedOn || "Not provided"}
+          </div>
         </div>
       </div>
       <div class="preview-item" style="margin-top: 1rem;">
         <div class="preview-label">Defect Description</div>
-        <div class="preview-value multiline ${!formData.defectDescription ? 'empty' : ''}">${formData.defectDescription || "No description provided"}</div>
-      </div>
-    </div>
-
-    <!-- ---------------- Engineering Disposition Preview (ADDED) ---------------- -->
-    <div class="preview-section">
-      <h3 class="preview-section-title">Engineering Disposition & Actions</h3>
-      <div class="preview-grid">
-        <div class="preview-item">
-          <div class="preview-label">Disposition Choices</div>
-          <div class="preview-value ${engActions.length === 0 ? 'empty' : ''}">
-            ${engActions.length ? engActions.join(", ") : "No disposition selected"}
-          </div>
-        </div>
-
-        <div class="preview-item">
-          <div class="preview-label">Disposition Notes</div>
-          <div class="preview-value multiline ${!eng.disposition ? 'empty' : ''}">
-            ${eng.disposition || "No notes provided"}
-          </div>
-        </div>
-
-        <div class="preview-item">
-          <div class="preview-label">Engineer Name</div>
-          <div class="preview-value ${!eng.nameOfEng ? 'empty' : ''}">
-            ${eng.nameOfEng || "Not provided"}
-          </div>
-        </div>
-
-        <div class="preview-item">
-          <div class="preview-label">Original Rev #</div>
-          <div class="preview-value ${!eng.origRevNum ? 'empty' : ''}">
-            ${eng.origRevNum || "Not provided"}
-          </div>
-        </div>
-
-        <div class="preview-item">
-          <div class="preview-label">Updated Revision (Date/Time)</div>
-          <div class="preview-value ${!eng.UpdatedRev ? 'empty' : ''}">
-            ${eng.UpdatedRev || "Not provided"}
-          </div>
-        </div>
-
-        <div class="preview-item">
-          <div class="preview-label">Revision Date</div>
-          <div class="preview-value ${!eng.RevisionDate ? 'empty' : ''}">
-            ${eng.RevisionDate || "Not provided"}
-          </div>
-        </div>
-
-        <div class="preview-item">
-          <div class="preview-label">Submitted Date</div>
-          <div class="preview-value ${!eng.submittedDate ? 'empty' : ''}">
-            ${eng.submittedDate || "Not provided"}
-          </div>
-        </div>
-
-        <div class="preview-item">
-          <div class="preview-label">Drawing / Extra Actions</div>
-          <div class="preview-value ${(engExtraFlags.length === 0) ? 'empty' : ''}">
-            ${engExtraFlags.length ? engExtraFlags.join(", ") : "No additional actions"}
-          </div>
+        <div class="preview-value multiline ${!formData.defectDescription ? 'empty' : ''}">
+          ${formData.defectDescription || "No description provided"}
         </div>
       </div>
     </div>
-    <!-- -------------- End Engineering Disposition Preview (ADDED) -------------- -->
+
+    ${engineeringHtml}
   `;
   
   content.innerHTML = html;
@@ -187,12 +222,13 @@ function showPreviewModal(formData) {
   document.body.style.overflow = "hidden";
 }
 
-// Function to hide preview modal
 function hidePreviewModal() {
   const modal = document.getElementById("previewModal");
   modal.classList.remove("active");
   document.body.style.overflow = "";
 }
+
+/* ---------------- Basic storage helpers (this file) ---------------- */
 function loadJSON(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
   catch { return fallback; }
@@ -201,19 +237,15 @@ function saveJSON(key, value) { localStorage.setItem(key, JSON.stringify(value))
 function notChosen(v) { return v === "" || v === "0" || (typeof v === "string" && v.toLowerCase() === "select"); }
 function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
 
-// Helper function to get checkbox values
+/* ---------------- Checkbox helpers ---------------- */
 function getCheckboxValues(name) {
   const checkboxes = document.querySelectorAll(`input[name="${name}"]:checked`);
   return Array.from(checkboxes).map(cb => cb.value);
 }
-
-// Helper function to get single checkbox value (for yes/no type fields)
 function getSingleCheckboxValue(name) {
   const values = getCheckboxValues(name);
   return values.length > 0 ? values[0] : "";
 }
-
-// Helper function to set checkbox values
 function setCheckboxValues(name, values) {
   const checkboxes = document.querySelectorAll(`input[name="${name}"]`);
   checkboxes.forEach(cb => {
@@ -221,20 +253,18 @@ function setCheckboxValues(name, values) {
   });
 }
 
-/* ---------------------- ENGINEERING HELPERS (ADDED) ---------------------- */
+/* ---------------------- ENGINEERING HELPERS ---------------------- */
 function readEngineeringFromForm() {
   const get = (id) => document.getElementById(id);
   const isChecked = (id) => !!get(id)?.checked;
 
   return {
-    // booleans
     useAsIs:       isChecked("eng-useAsIs"),
     repair:        isChecked("eng-repair"),
     rework:        isChecked("eng-rework"),
     scrap:         isChecked("eng-scrap"),
     custNotifNCR:  isChecked("eng-custNotif"),
     drawingReqUpd: isChecked("eng-drawingReqUpd"),
-    // text/number/dates
     disposition:   (get("eng-disposition")?.value || "").trim(),
     origRevNum:    Number(get("eng-origRevNum")?.value || 0) || 0,
     nameOfEng:     (get("eng-nameOfEng")?.value || "").trim(),
@@ -263,24 +293,133 @@ function writeEngineeringToForm(eng) {
   set("eng-submittedDate",   eng.submittedDate ?? "");
 }
 
-// Gate: enable/disable Engineering until inspector part is filled
-function lockEngineeringIfNeeded() {
-  const engSection = document.getElementById("engineering-section");
-  if (!engSection) return;
+/* ---------------------- WORKFLOW HELPERS (same idea as index) ---------------------- */
 
-  const hasInspector = (document.getElementById("inspected-by")?.value || "").trim() !== "" &&
-                       (document.getElementById("inspected-on")?.value || "") !== "";
+// Optional: keep this if you want to check completeness; not used for stage.
+function isQualitySectionComplete(details) {
+  if (!details) return false;
 
-  const disableAll = (disabled) => {
-    engSection.querySelectorAll("input, textarea, select").forEach(el => el.disabled = disabled);
-  };
+  const headerComplete =
+    !!details.purchaseOrder &&
+    (!!details.supplierName || !!details.supplierValue) &&
+    !!details.processTypeValue;
 
-  // If inspector part is not finished, disable inputs but still allow the accordion to open
-  disableAll(!hasInspector);
+  const inspectionComplete =
+    !!details.productValue &&
+    details.recvQty !== undefined &&
+    details.recvQty !== null &&
+    details.recvQty !== "" &&
+    !!details.issueCategoryValue &&
+    !!details.defectDescription &&
+    !!details.inspectedBy &&
+    !!details.inspectedOn;
+
+  return headerComplete && inspectionComplete;
 }
-/* -------------------- END ENGINEERING HELPERS (ADDED) -------------------- */
 
-// Validation helper functions
+function getWorkflowInfo(details) {
+  if (!details) {
+    return {
+      label: "Quality Inspector",
+      stage: "quality"
+    };
+  }
+
+  const qualityCompleted = !!details.qualityCompleted;
+
+  const eng = details.engineering || {};
+  const engActionsSelected =
+    !!eng.useAsIs ||
+    !!eng.repair ||
+    !!eng.rework ||
+    !!eng.scrap ||
+    !!eng.custNotifNCR ||
+    !!eng.drawingReqUpd;
+
+  const engineeringComplete =
+    engActionsSelected &&
+    !!eng.disposition &&
+    !!eng.nameOfEng;
+
+  if (details.isCompleted) {
+    return {
+      label: "Completed",
+      stage: "completed"
+    };
+  }
+
+  if (!qualityCompleted) {
+    return {
+      label: "Quality Inspector",
+      stage: "quality"
+    };
+  }
+
+  if (!engineeringComplete) {
+    return {
+      label: "Engineering",
+      stage: "engineering"
+    };
+  }
+
+  return {
+    label: "Engineering",
+    stage: "engineering"
+  };
+}
+
+/* ---- UI helpers to hide/show sections based on stage ---- */
+
+function hideEngineeringSectionForQuality() {
+  const engSection = document.getElementById("engineering-section");
+  if (engSection) {
+    engSection.style.display = "none";
+    engSection.setAttribute("aria-hidden", "true");
+  }
+}
+
+function enableEngineeringOnly() {
+  const engSection = document.getElementById("engineering-section");
+  const form = document.getElementById("ncr-edit-form") || document.querySelector("form");
+  if (!engSection || !form) return;
+
+  engSection.style.display = "";
+  engSection.removeAttribute("aria-hidden");
+
+  const isAccordionToggle = (el) =>
+    el.classList && el.classList.contains("fieldset-toggle");
+
+  form.querySelectorAll("input, select, textarea").forEach(el => {
+    const inEngineering = engSection.contains(el);
+    const toggle = isAccordionToggle(el);
+
+    // Keep accordion toggles working
+    if (toggle) {
+      el.disabled = false;
+      return;
+    }
+
+    if (inEngineering) {
+      // Engineering inputs remain editable
+      if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
+        el.readOnly = false;
+      }
+      if (el.tagName === "SELECT" || el.type === "checkbox" || el.type === "radio") {
+        el.disabled = false;
+      }
+    } else {
+      // Inspector area is read-only for engineer
+      if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
+        el.readOnly = true;
+      }
+      if (el.tagName === "SELECT" || el.type === "checkbox" || el.type === "radio") {
+        el.disabled = true;
+      }
+    }
+  });
+}
+
+// ---------------- Validation helpers ----------------
 function clearValidation(elementId) {
   const element = document.getElementById(elementId);
   if (element) {
@@ -298,15 +437,12 @@ function clearValidation(elementId) {
 function showValidationError(elementId, message) {
   const element = document.getElementById(elementId);
   if (element) {
-    // Check if the field is in a collapsed accordion section
     const fieldsetContent = element.closest('.fieldset-content');
     const isFieldVisible = fieldsetContent && window.getComputedStyle(fieldsetContent).maxHeight !== '0px';
     
     if (!isFieldVisible) {
-      // Field is in a collapsed accordion - show alert and open the accordion
       alert("Please check all form sections. There are required fields in other sections that need to be completed.");
       
-      // Find and open the accordion containing this field
       const fieldset = element.closest('.collapsible-fieldset');
       if (fieldset) {
         const toggleInput = fieldset.querySelector('.fieldset-toggle');
@@ -320,19 +456,16 @@ function showValidationError(elementId, message) {
     if (formGroup) {
       formGroup.classList.add('invalid');
       
-      // Remove existing error message
       const existingError = formGroup.querySelector('.error-message');
       if (existingError) {
         existingError.remove();
       }
       
-      // Add new error message
       const errorDiv = document.createElement('div');
       errorDiv.className = 'error-message';
       errorDiv.textContent = message;
       formGroup.appendChild(errorDiv);
       
-      // Clear validation when user interacts with the field
       const clearValidationHandler = () => {
         clearValidation(elementId);
         element.removeEventListener('input', clearValidationHandler);
@@ -360,7 +493,7 @@ function clearAllValidation() {
 // Function to mark required fields
 function markRequiredFields() {
   const requiredFieldIds = [
-    'po-number',      // Updated from 'purchase-order'
+    'po-number',
     'inspected-by',
     'defect-desc',
     'supplier-id',
@@ -369,25 +502,21 @@ function markRequiredFields() {
     'recv-qty',
     'defect-qty',
     'inspected-on',
-    'process-type-id' // Added to match create page requirement
+    'process-type-id'
   ];
   
-  // Mark each required field
   requiredFieldIds.forEach(fieldId => {
     const element = document.getElementById(fieldId);
     if (element) {
       const formGroup = element.closest('.form-group');
       if (formGroup) {
         formGroup.classList.add('required');
-        
-        // Add required attribute for accessibility
         element.setAttribute('required', 'true');
         element.setAttribute('aria-required', 'true');
       }
     }
   });
   
-  // Add required fields legend to the form
   const form = document.getElementById('ncr-edit-form') || document.querySelector('form');
   if (form && !form.querySelector('.required-fields-legend')) {
     const legend = document.createElement('div');
@@ -397,16 +526,15 @@ function markRequiredFields() {
   }
 }
 
-//state from URL 
+// ---------------- URL state & DOM refs ----------------
 const params = new URLSearchParams(window.location.search);
 const ncrNumberParam = params.get("ncr") || "";
 const urlCreated     = params.get("dateCreated") || "";
 const urlSupplier    = params.get("supplier") || "";
 
-//DOM refs 
 const form           = document.getElementById("ncr-edit-form") || document.querySelector("form");
 const inpNcr         = document.getElementById("ncr-number");
-const inpCreated     = document.getElementById("created-on");      // Updated ID
+const inpCreated     = document.getElementById("created-on");
 const selSupplier    = document.getElementById("supplier-id");
 const selProduct     = document.getElementById("product-id");
 const inpRecvQty     = document.getElementById("recv-qty");
@@ -416,9 +544,9 @@ const inpDefectDesc  = document.getElementById("defect-desc");
 const inpInspector   = document.getElementById("inspected-by");
 const inpInspectedOn = document.getElementById("inspected-on");
 const selStatus      = document.getElementById("ncr-status");
-const inpPONum       = document.getElementById("po-number");        // Updated ID
-const inpSONum       = document.getElementById("so-number");        // New field
-const selProcessType = document.getElementById("process-type-id");  // New field
+const inpPONum       = document.getElementById("po-number");
+const inpSONum       = document.getElementById("so-number");
+const selProcessType = document.getElementById("process-type-id");
 
 //baseline snapshot for Reset 
 let baselineDetails = null;  
@@ -443,10 +571,11 @@ function fillFormFrom(details, row) {
   if (inpCreated) {
     inpCreated.value = (details?.dateCreated || row?.dateCreated || urlCreated || todayISO());
   }
-   // Engineering added
+
   if (details && details.engineering) {
     writeEngineeringToForm(details.engineering);
   }
+
   if (selSupplier) {
     const supplierText = (details?.supplierName || row?.supplier || urlSupplier || "");
     setSelectByText(selSupplier, supplierText);
@@ -454,8 +583,8 @@ function fillFormFrom(details, row) {
   const setVal = (el, v) => { if (el && v != null && v !== "") el.value = v; };
   if (details) {
     setVal(inpPONum,       details.purchaseOrder);
-    setVal(inpSONum,       details.salesOrder);         // New field
-    setVal(selProcessType, details.processTypeValue);    // New field  
+    setVal(inpSONum,       details.salesOrder);
+    setVal(selProcessType, details.processTypeValue);
     setVal(selProduct,     details.productValue);
     setVal(inpRecvQty,     details.recvQty);
     setVal(inpDefectQty,   details.defectQty);
@@ -465,7 +594,6 @@ function fillFormFrom(details, row) {
     setVal(inpInspectedOn, details.inspectedOn);
     setVal(selStatus,      details.status);
     
-    // Handle checkbox fields
     if (details.itemNonconforming) {
       setCheckboxValues("item-nonconforming", details.itemNonconforming);
     }
@@ -477,10 +605,8 @@ function fillFormFrom(details, row) {
 
 //prefill on load
 document.addEventListener("DOMContentLoaded", () => {
-  // Mark required fields with asterisks
   markRequiredFields();
   
-  // Add mutual exclusivity for Item Marked Nonconforming checkboxes
   const nonconformingYes = document.getElementById("item-nonconforming-yes");
   const nonconformingNo = document.getElementById("item-nonconforming-no");
   
@@ -498,56 +624,46 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   
-  // 1) show NCR number (read-only)
   if (inpNcr) {
     inpNcr.value = ncrNumberParam;
     inpNcr.readOnly = true;
     inpNcr.setAttribute("tabindex", "-1");
   }
 
-  // load existing list row + details 
   const list = loadJSON(STORAGE_KEY, []);
   const row  = list.find(r => String(r.ncrNumber) === String(ncrNumberParam)) || null;
 
   const detailsMap = loadJSON(DETAILS_KEY, {});
   const details    = detailsMap[ncrNumberParam] || null;
 
-  //keep a baseline snapshot for Reset
   baselineRow     = deepClone(row);
   baselineDetails = deepClone(details);
 
-  // fill the form from storage 
   fillFormFrom(details, row);
 
-  // Check if NCR is completed and disable editing if so
-  if (details && details.isCompleted) {
+  // Determine current workflow stage from saved details
+  const wfInfo = getWorkflowInfo(details);
+  currentStage = wfInfo.stage || "quality";
+
+  if (currentStage === "completed") {
     disableFormForCompletedNCR();
+  } else if (currentStage === "quality") {
+    hideEngineeringSectionForQuality();
+  } else if (currentStage === "engineering") {
+    enableEngineeringOnly();
   }
 
-  /* --------- Engineering lock/unlock based on Inspector fields (ADDED) --------- */
-  lockEngineeringIfNeeded();
-  ["inspected-by","inspected-on"].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener("change", lockEngineeringIfNeeded);
-    if (el) el.addEventListener("input",  lockEngineeringIfNeeded);
-  });
-  /* -------------------- End Engineering lock wiring (ADDED) -------------------- */
-
-  // update 
   if (form) form.addEventListener("submit", onUpdateSubmit);
 
-  // wire up Mark as Completed 
   const btnComplete = document.getElementById("btnComleted");
   if (btnComplete) {
     btnComplete.setAttribute("type","button");
     btnComplete.addEventListener("click", (e) => {
       e.preventDefault();
-      // Validate and show preview instead of immediate completion
       validateAndShowPreview();
     });
   }
   
-  // Handle Keep Editing button in preview modal
   const btnKeepEditing = document.getElementById("btnKeepEditing");
   if (btnKeepEditing) {
     btnKeepEditing.addEventListener("click", () => {
@@ -555,7 +671,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   
-  // Handle Confirm Completion button in preview modal
   const btnConfirmCompletion = document.getElementById("btnConfirmCompletion");
   if (btnConfirmCompletion) {
     btnConfirmCompletion.addEventListener("click", () => {
@@ -564,14 +679,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // wire up Reset Changes and also intercept native form reset
   const btnResetChanges = document.getElementById("btnResetChanges") || document.getElementById("btnReset");
   if (btnResetChanges) {
     btnResetChanges.addEventListener("click", onResetClick);
   }
   if (form) {
     form.addEventListener("reset", (e) => {
-      //Prevent browser native reset 
       e.preventDefault();
       onResetClick(e);
     });
@@ -582,7 +695,6 @@ document.addEventListener("DOMContentLoaded", () => {
 function onResetClick(e) {
   if (e) e.preventDefault();
 
-  // reload freshest saved state from storage 
   const latestDetailsMap = loadJSON(DETAILS_KEY, {});
   const latestDetails = latestDetailsMap[ncrNumberParam] || baselineDetails;
 
@@ -590,12 +702,13 @@ function onResetClick(e) {
   const latestRow  = latestList.find(r => String(r.ncrNumber) === String(ncrNumberParam)) || baselineRow;
 
   fillFormFrom(latestDetails, latestRow);
-  
 }
 
 // Function to disable form editing for completed NCRs
 function disableFormForCompletedNCR() {
-  // Disable all form inputs
+  const form = document.getElementById("ncr-edit-form") || document.querySelector("form");
+  if (!form) return;
+
   const formElements = form.querySelectorAll('input, select, textarea, button');
   formElements.forEach(element => {
     if (element.type !== 'radio') { // Don't disable accordion toggles
@@ -603,7 +716,6 @@ function disableFormForCompletedNCR() {
     }
   });
   
-  // Add completed status message at the top of the form
   if (form && !form.querySelector('.completion-status')) {
     const statusDiv = document.createElement('div');
     statusDiv.className = 'completion-status alert alert-success';
@@ -611,7 +723,6 @@ function disableFormForCompletedNCR() {
     form.insertBefore(statusDiv, form.firstChild);
   }
   
-  // Change page title
   const h1 = document.querySelector('h1');
   if (h1) {
     h1.textContent = 'View Non-Conformance Report (Completed)';
@@ -621,17 +732,25 @@ function disableFormForCompletedNCR() {
 //Validate + Save 
 function onUpdateSubmit(e, stayHere = false) {
   e.preventDefault();
-  performUpdate(false, stayHere); // false = not completed
+  completingFromButton = false;        // normal save
+  performUpdate(false, stayHere);      // normal update
 }
 
-// Function to mark NCR as completed
+// When user confirms completion from the preview modal
+// - In Quality stage  -> save inspector part, set qualityCompleted = true
+// - In Engineering stage -> save engineering & mark full NCR completed
 function markAsCompleted() {
-  performUpdate(true, false); // true = completed, false = don't stay
+  completingFromButton = true;
+  if (currentStage === "engineering") {
+    performUpdate(true, false);   // final completion
+  } else {
+    performUpdate(false, false);  // just inspector completion
+  }
+  completingFromButton = false;
 }
 
 // Function to validate form and show preview modal
 function validateAndShowPreview() {
-  // Collect all form data first
   const ncrNumber   = (inpNcr?.value || "").trim();
   const dateCreated = (inpCreated?.value || todayISO());
   const supplierVal  = selSupplier?.value || "";
@@ -652,13 +771,10 @@ function validateAndShowPreview() {
   const itemNonconforming = getSingleCheckboxValue("item-nonconforming");
   const processApplicable = getCheckboxValues("process-applicable");
 
-  // Read engineering section for preview (ADDED)
   const engineering = readEngineeringFromForm();
   
-  // Clear any previous validation errors
   clearAllValidation();
   
-  // Run validation
   if (poNumber === "") { 
     showValidationError("po-number", "Purchase Order number is required.");
     return; 
@@ -713,7 +829,6 @@ function validateAndShowPreview() {
     return; 
   }
   
-  // If validation passes, show preview modal
   const formData = {
     ncrNumber,
     createdOn: dateCreated,
@@ -730,10 +845,11 @@ function validateAndShowPreview() {
     defectDescription: defectDesc,
     inspectedBy,
     inspectedOn,
-    engineering          // ADDED
+    engineering
   };
   
-  showPreviewModal(formData);
+  const includeEngineering = (currentStage === "engineering");
+  showPreviewModal(formData, includeEngineering);
 }
 
 function performUpdate(isCompleted = false, stayHere = false) {
@@ -753,21 +869,18 @@ function performUpdate(isCompleted = false, stayHere = false) {
   const inspectedOn  = (inpInspectedOn?.value || "");
   const statusVal    = selStatus?.value || "Open";
   const poNumber     = (inpPONum?.value || "").trim();
-  const soNumber     = (inpSONum?.value || "").trim();         // New field
-  const processType  = selProcessType?.value || "";            // New field
+  const soNumber     = (inpSONum?.value || "").trim();
+  const processType  = selProcessType?.value || "";
   
-  // Read checkbox values
   const itemNonconforming = getSingleCheckboxValue("item-nonconforming");
   const processApplicable = getCheckboxValues("process-applicable");
 
-  // Clear any previous validation errors
   clearAllValidation();
 
-  // Only validate when marking as completed
+  // Only re-run full validation when marking the WHOLE NCR as completed
   if (isCompleted) {
-    //validations with visual feedback
     if (poNumber === "") { 
-      showValidationError("po-number", "Purchase Order number is required.");  // Fixed ID
+      showValidationError("po-number", "Purchase Order number is required.");
       return; 
     }
     if (inspectedBy === "") { 
@@ -806,7 +919,6 @@ function performUpdate(isCompleted = false, stayHere = false) {
       showValidationError("defect-qty", "Enter a valid defective quantity (number ≥ 0)."); 
       return; 
     }
-    //defective cannot exceed received
     if (defectQtyChecked > recvQtyChecked) { 
       showValidationError("defect-qty", "Defective quantity cannot be greater than received quantity."); 
       return; 
@@ -824,23 +936,24 @@ function performUpdate(isCompleted = false, stayHere = false) {
     }
   }
   
-  // Convert string values to numbers for storage (even if not validating)
   const recvQty   = Number(recvQtyStr);
   const defectQty = Number(defectQtyStr);
 
   const lastModified = todayISO();
 
-  //save full details map 
   const detailsMap = loadJSON(DETAILS_KEY, {});
+  const existing   = detailsMap[ncrNumber] || {};
+
   detailsMap[ncrNumber] = {
+    ...existing,
     ncrNumber,
     dateCreated,
     lastModified,
     purchaseOrder: poNumber,
-    salesOrder: soNumber,                    // New field
+    salesOrder: soNumber,
     supplierValue: supplierVal,
     supplierName:  supplierText,
-    processTypeValue: processType,           // New field
+    processTypeValue: processType,
     productValue:  productVal,
     recvQty,
     defectQty,
@@ -850,35 +963,44 @@ function performUpdate(isCompleted = false, stayHere = false) {
     inspectedOn,
     status: statusVal,
     isCompleted: isCompleted,
-    itemNonconforming: itemNonconforming,    // New checkbox field
-    processApplicable: processApplicable     // New checkbox field
+    itemNonconforming: itemNonconforming,
+    processApplicable: processApplicable
   };
 
-  /* ---------------------- ENGINEERING SAVE BLOCK (ADDED) ---------------------- */
+  // -------- ENGINEERING SAVE BLOCK --------
   const engineering = readEngineeringFromForm();
 
-  // If any engineering choice is made, require name and notes
   const anyEngChoice = engineering.useAsIs || engineering.repair || engineering.rework ||
                        engineering.scrap || engineering.custNotifNCR || engineering.drawingReqUpd;
 
   if (anyEngChoice) {
-    if (!engineering.nameOfEng) { showValidationError("eng-nameOfEng", "Engineer name is required when a disposition is selected."); return; }
-    if (!engineering.disposition) { showValidationError("eng-disposition", "Please provide disposition notes."); return; }
+    if (!engineering.nameOfEng) {
+      showValidationError("eng-nameOfEng", "Engineer name is required when a disposition is selected.");
+      return;
+    }
+    if (!engineering.disposition) {
+      showValidationError("eng-disposition", "Please provide disposition notes.");
+      return;
+    }
   }
 
-  // attach under details.engineering without disturbing existing keys
   detailsMap[ncrNumber].engineering = engineering;
-  /* -------------------- END ENGINEERING SAVE BLOCK (ADDED) -------------------- */
+
+  // When Mark As Completed button is used (inspector or engineer),
+  // record that the quality portion has been completed.
+  if (completingFromButton) {
+    detailsMap[ncrNumber].qualityCompleted = true;
+  }
+  // ----------------------------------------
 
   saveJSON(DETAILS_KEY, detailsMap);
 
-  //Patch the home table list 
   const list = loadJSON(STORAGE_KEY, []);
   const idx  = list.findIndex(r => String(r.ncrNumber) === String(ncrNumber));
   if (idx >= 0) {
     list[idx] = {
       ...list[idx],
-      dateCreated,     
+      dateCreated,
       lastModified,
       supplier: supplierText,
       status: statusVal,
@@ -897,12 +1019,13 @@ function performUpdate(isCompleted = false, stayHere = false) {
   }
   saveJSON(STORAGE_KEY, list);
 
-  // update baseline so future Reset returns to this saved state 
   baselineDetails = deepClone(detailsMap[ncrNumber]);
   baselineRow     = deepClone(list.find(r => String(r.ncrNumber) === String(ncrNumber)));
 
   if (isCompleted) {
     alert("NCR has been marked as completed. This form can no longer be edited.");
+  } else if (completingFromButton && currentStage === "quality") {
+    alert("Inspector section has been completed. Engineering can now work on this NCR.");
   } else {
     alert("NCR updated.");
   }

@@ -71,11 +71,9 @@ function getDetailsMap() {
 }
 
 // ------------------------
-// Workflow helpers
+// Optional helper: checks if inspector section is filled
+// (not used for stage anymore, but kept if needed later).
 // ------------------------
-
-// Determine if the "Quality/Inspector" side (header + issue + inspection)
-// is fully completed.
 function isQualitySectionComplete(details) {
   if (!details) return false;
 
@@ -94,12 +92,15 @@ function isQualitySectionComplete(details) {
     !!details.inspectedBy &&
     !!details.inspectedOn;
 
-  // If you later track attachments as required, add them here.
   return headerComplete && inspectionComplete;
 }
 
 /**
  * Decide which workflow stage is NEXT / currently needed.
+ * Uses explicit flags:
+ *  - details.qualityCompleted  (inspector pressed "Mark as Completed")
+ *  - details.isCompleted       (engineer pressed "Mark as Completed")
+ *
  * Returns:
  *   { label: "Quality Inspector", stage: "quality" }
  *   { label: "Engineering",      stage: "engineering" }
@@ -107,13 +108,14 @@ function isQualitySectionComplete(details) {
  */
 function getWorkflowInfo(details) {
   if (!details) {
+    // Brand new NCR – inspector starts
     return {
       label: "Quality Inspector",
       stage: "quality"
     };
   }
 
-  const qualityComplete = isQualitySectionComplete(details);
+  const qualityCompleted = !!details.qualityCompleted;
 
   const eng = details.engineering || {};
   const engActionsSelected =
@@ -129,7 +131,7 @@ function getWorkflowInfo(details) {
     !!eng.disposition &&
     !!eng.nameOfEng;
 
-  // 1. NCR fully completed
+  // 1. NCR fully completed by Engineering
   if (details.isCompleted) {
     return {
       label: "Completed",
@@ -137,15 +139,15 @@ function getWorkflowInfo(details) {
     };
   }
 
-  // 2. Quality/Inspector side is not done yet
-  if (!qualityComplete) {
+  // 2. Inspector has NOT yet pressed Mark As Completed
+  if (!qualityCompleted) {
     return {
       label: "Quality Inspector",
       stage: "quality"
     };
   }
 
-  // 3. Quality done → next worker is Engineering
+  // 3. Inspector finished -> Engineering takes over
   if (!engineeringComplete) {
     return {
       label: "Engineering",
@@ -153,8 +155,7 @@ function getWorkflowInfo(details) {
     };
   }
 
-  // 4. Engineering done but Mark as Completed not pressed yet
-  //    Still show Engineering as the active/next step.
+  // 4. Engineering completed fields but hasn't pressed final Mark As Completed
   return {
     label: "Engineering",
     stage: "engineering"
@@ -595,7 +596,7 @@ function downloadPDF(ncrNumber) {
         <div class="pdf-field">
           <div class="pdf-field-label">Engineering Date</div>
           <div class="pdf-field-value">
-            ${eng.engDate || eng.engineeringDate || eng.engDateValue || "N/A"}
+            ${eng.engDate || eng.engineeringDate || eng.engDateValue || eng.RevisionDate || "N/A"}
           </div>
         </div>
       </div>
