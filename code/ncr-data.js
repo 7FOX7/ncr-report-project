@@ -1,5 +1,3 @@
-
-
 let ncrData = (window.ncrData && Array.isArray(window.ncrData)) ? window.ncrData : [
   { id: 1, ncrNumber: "2025-611", dateCreated: "2025-10-01", lastModified: "2025-10-05", supplier: "BlueHaven Distributors" },
   { id: 2, ncrNumber: "2025-325", dateCreated: "2025-10-02", lastModified: "2025-10-06", supplier: "Apex Global Trading" },
@@ -13,13 +11,20 @@ let ncrArchivedData = (window.ncrArchivedData && Array.isArray(window.ncrArchive
 
 let ncrFilteredData = ncrData.slice();
 
-//LocalStorage helpers 
+// ------------------------
+// LocalStorage helpers
+// ------------------------
 function loadJSON(key, fallback) {
-  try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
-  catch { return fallback; }
+  try {
+    return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
+  } catch {
+    return fallback;
+  }
 }
 
-//  Merge NEW rows from Create 
+// ------------------------
+// Merge NEW rows from Create
+// ------------------------
 function mergeIncomingRecords() {
   const incoming = loadJSON("ncrNewRecords", []);
   if (!Array.isArray(incoming) || incoming.length === 0) return;
@@ -29,17 +34,21 @@ function mergeIncomingRecords() {
 
   incoming.forEach(r => {
     if (!seen.has(r.ncrNumber)) {
-      if (typeof r.id !== "number" || !Number.isFinite(r.id)) { maxId += 1; r.id = maxId; }
+      if (typeof r.id !== "number" || !Number.isFinite(r.id)) {
+        maxId += 1;
+        r.id = maxId;
+      }
       ncrData.push(r);
       seen.add(r.ncrNumber);
     }
   });
 
-  
   // localStorage.removeItem("ncrNewRecords");
 }
 
-//  Apply EDITS from Edit page 
+// ------------------------
+// Apply EDITS from Edit page
+// ------------------------
 function applyEdits() {
   const edits = loadJSON("ncrEdits", []);
   if (!Array.isArray(edits) || edits.length === 0) return;
@@ -50,16 +59,111 @@ function applyEdits() {
     if (row) Object.assign(row, e);
   });
 
- 
   // localStorage.removeItem("ncrEdits");
 }
 
-//  Details map 
+// ------------------------
+// Details map
+// ------------------------
 function getDetailsMap() {
-  return loadJSON("ncrDetails", {});   // { [ncrNumber]: { ... } }
+  // { [ncrNumber]: { ... } }
+  return loadJSON("ncrDetails", {});
 }
 
-// Render the table 
+// ------------------------
+// Workflow helpers
+// ------------------------
+
+// Determine if the "Quality/Inspector" side (header + issue + inspection)
+// is fully completed.
+function isQualitySectionComplete(details) {
+  if (!details) return false;
+
+  const headerComplete =
+    !!details.purchaseOrder &&
+    (!!details.supplierName || !!details.supplierValue) &&
+    !!details.processTypeValue;
+
+  const inspectionComplete =
+    !!details.productValue &&
+    details.recvQty !== undefined &&
+    details.recvQty !== null &&
+    details.recvQty !== "" &&
+    !!details.issueCategoryValue &&
+    !!details.defectDescription &&
+    !!details.inspectedBy &&
+    !!details.inspectedOn;
+
+  // If you later track attachments as required, add them here.
+  return headerComplete && inspectionComplete;
+}
+
+/**
+ * Decide which workflow stage is NEXT / currently needed.
+ * Returns:
+ *   { label: "Quality Inspector", stage: "quality" }
+ *   { label: "Engineering",      stage: "engineering" }
+ *   { label: "Completed",        stage: "completed" }
+ */
+function getWorkflowInfo(details) {
+  if (!details) {
+    return {
+      label: "Quality Inspector",
+      stage: "quality"
+    };
+  }
+
+  const qualityComplete = isQualitySectionComplete(details);
+
+  const eng = details.engineering || {};
+  const engActionsSelected =
+    !!eng.useAsIs ||
+    !!eng.repair ||
+    !!eng.rework ||
+    !!eng.scrap ||
+    !!eng.custNotifNCR ||
+    !!eng.drawingReqUpd;
+
+  const engineeringComplete =
+    engActionsSelected &&
+    !!eng.disposition &&
+    !!eng.nameOfEng;
+
+  // 1. NCR fully completed
+  if (details.isCompleted) {
+    return {
+      label: "Completed",
+      stage: "completed"
+    };
+  }
+
+  // 2. Quality/Inspector side is not done yet
+  if (!qualityComplete) {
+    return {
+      label: "Quality Inspector",
+      stage: "quality"
+    };
+  }
+
+  // 3. Quality done → next worker is Engineering
+  if (!engineeringComplete) {
+    return {
+      label: "Engineering",
+      stage: "engineering"
+    };
+  }
+
+  // 4. Engineering done but Mark as Completed not pressed yet
+  //    Still show Engineering as the active/next step.
+  return {
+    label: "Engineering",
+    stage: "engineering"
+  };
+}
+
+// ------------------------
+// Render the table
+// ------------------------
 function renderNCRTable(page = 1) {
   const tableBody = document.querySelector(".ncr-table tbody");
   if (!tableBody) return;
@@ -68,14 +172,13 @@ function renderNCRTable(page = 1) {
   const per = parseInt(perSel?.value || "5", 10);
   const itemsPerPage = Number.isFinite(per) && per > 0 ? per : 5;
 
+  const detailsMap = getDetailsMap();
+
   const startIdx = (page - 1) * itemsPerPage;
   const endIdx = startIdx + itemsPerPage;
   const pageData = ncrFilteredData.slice(startIdx, endIdx);
 
   tableBody.innerHTML = "";
-
-  const status = document.querySelector('input[name="ncr-active"]:checked')?.value;
-  const detailsMap = getDetailsMap();
 
   pageData.forEach(ncr => {
     const d = detailsMap[ncr.ncrNumber];
@@ -84,59 +187,67 @@ function renderNCRTable(page = 1) {
     const supplier     = d?.supplierName || ncr.supplier || "";
     const isCompleted  = d?.isCompleted || ncr.isCompleted || false;
 
+    const workflowInfo = getWorkflowInfo(d);
+
     const row = document.createElement("tr");
     row.dataset.ncrId = ncr.id;
-    
-    // Add completed styling if NCR is completed
+
     if (isCompleted) {
-      row.classList.add('ncr-completed');
+      row.classList.add("ncr-completed");
     }
 
     let actionsHtml = "";
-    // determine whether this row is archived; dataset may annotate records with an `archived` flag
-    const isArchived = (ncr.archived === true) || ncrArchivedData.some(a => a.id === ncr.id);
+    const isArchived =
+      (ncr.archived === true) ||
+      ncrArchivedData.some(a => a.id === ncr.id);
 
-    // Active (non-archived) rows: show Edit and Archive (unless completed)
     if (!isCompleted && !isArchived) {
       actionsHtml = `
         <button type="button" class="btn btn-secondary"
           aria-label="Edit ${ncr.ncrNumber}"
-          onclick="openEdit('${ncr.ncrNumber}', '${dateCreated}', '${(supplier || "").toString().replace(/'/g, "\\'")}')">Edit</button>
+          onclick="openEdit('${ncr.ncrNumber}', '${dateCreated}', '${(supplier || "").toString().replace(/'/g, "\\'")}')">
+          Edit
+        </button>
       `;
 
       actionsHtml += `
         <button type="button" class="btn btn-outline"
           aria-label="Archive ${ncr.ncrNumber}"
-          onclick="showArchiveConfirmation(${ncr.id}, '${ncr.ncrNumber}')">Archive</button>
+          onclick="showArchiveConfirmation(${ncr.id}, '${ncr.ncrNumber}')">
+          Archive
+        </button>
       `;
     }
 
-    // Archived rows: show Un-archive
     if (isArchived) {
       actionsHtml += `
         <button type="button" class="btn btn-secondary"
           aria-label="Un-archive ${ncr.ncrNumber}"
-          onclick="showUnarchiveConfirmation(${ncr.id}, '${ncr.ncrNumber}')">Un-archive</button>
+          onclick="showUnarchiveConfirmation(${ncr.id}, '${ncr.ncrNumber}')">
+          Un-archive
+        </button>
       `;
     }
 
-    // PDF button: only show for completed NCRs
     if (isCompleted) {
       actionsHtml += `
         <button type="button" class="btn btn-outline"
           aria-label="Download ${ncr.ncrNumber} as PDF"
-          onclick="downloadPDF('${ncr.ncrNumber}')">PDF</button>
+          onclick="downloadPDF('${ncr.ncrNumber}')">
+          PDF
+        </button>
       `;
     }
 
     row.innerHTML = `
       <td data-label="NCR Number">
         ${ncr.ncrNumber}
-        ${isCompleted ? '<span class="completion-badge">COMPLETED</span>' : ''}
+        ${isCompleted ? '<span class="completion-badge">COMPLETED</span>' : ""}
       </td>
       <td data-label="Date Created">${dateCreated}</td>
       <td data-label="Last Modified">${lastModified}</td>
       <td data-label="Supplier">${supplier}</td>
+      <td data-label="Workflow Stage">${workflowInfo.label}</td>
       <td data-label="Actions">${actionsHtml}</td>
     `;
     tableBody.appendChild(row);
@@ -153,20 +264,31 @@ function renderNCRTable(page = 1) {
   }
 }
 
-// Archive flow 
+// ------------------------
+// Archive flow
+// ------------------------
 function showArchiveConfirmation(ncrId, ncrNumber) {
   const modal = document.getElementById("archive-modal");
   const ncrNumberSpan = document.getElementById("archive-ncr-number");
   const confirmButton = document.getElementById("confirm-archive");
   if (ncrNumberSpan) ncrNumberSpan.textContent = ncrNumber;
   if (confirmButton) confirmButton.onclick = () => archiveNCR(ncrId);
-  if (modal) { modal.style.display = "block"; modal.setAttribute("aria-hidden", "false"); }
-  const cancelBtn = document.getElementById("cancel-archive"); if (cancelBtn) cancelBtn.focus();
+  if (modal) {
+    modal.style.display = "block";
+    modal.setAttribute("aria-hidden", "false");
+  }
+  const cancelBtn = document.getElementById("cancel-archive");
+  if (cancelBtn) cancelBtn.focus();
 }
+
 function closeArchiveModal() {
   const modal = document.getElementById("archive-modal");
-  if (modal) { modal.style.display = "none"; modal.setAttribute("aria-hidden", "true"); }
+  if (modal) {
+    modal.style.display = "none";
+    modal.setAttribute("aria-hidden", "true");
+  }
 }
+
 function archiveNCR(ncrId) {
   const idx = ncrData.findIndex(r => r.id === ncrId);
   if (idx >= 0) {
@@ -177,20 +299,24 @@ function archiveNCR(ncrId) {
   filterNCRData(1);
 }
 
-// Un-archive flow: move record from archived set back to active set
+// ------------------------
+// Un-archive flow
+// ------------------------
 function unarchiveNCR(ncrId) {
   const idx = ncrArchivedData.findIndex(r => r.id === ncrId);
   if (idx >= 0) {
     const rec = ncrArchivedData.splice(idx, 1)[0];
     ncrData.push(rec);
   }
-  // Close modal if open
   closeUnarchiveModal();
 
-  // Preserve current pagination and filter when refreshing
   let currentPage = 1;
-  if (typeof getCurrentPage === 'function') {
-    try { currentPage = getCurrentPage(); } catch (_) { currentPage = 1; }
+  if (typeof getCurrentPage === "function") {
+    try {
+      currentPage = getCurrentPage();
+    } catch {
+      currentPage = 1;
+    }
   }
   filterNCRData(currentPage);
 }
@@ -201,16 +327,25 @@ function showUnarchiveConfirmation(ncrId, ncrNumber) {
   const confirmButton = document.getElementById("confirm-unarchive");
   if (span) span.textContent = ncrNumber;
   if (confirmButton) confirmButton.onclick = () => unarchiveNCR(ncrId);
-  if (modal) { modal.style.display = "block"; modal.setAttribute("aria-hidden", "false"); }
-  const cancelBtn = document.getElementById("cancel-unarchive"); if (cancelBtn) cancelBtn.focus();
+  if (modal) {
+    modal.style.display = "block";
+    modal.setAttribute("aria-hidden", "false");
+  }
+  const cancelBtn = document.getElementById("cancel-unarchive");
+  if (cancelBtn) cancelBtn.focus();
 }
 
 function closeUnarchiveModal() {
   const modal = document.getElementById("unarchive-modal");
-  if (modal) { modal.style.display = "none"; modal.setAttribute("aria-hidden", "true"); }
+  if (modal) {
+    modal.style.display = "none";
+    modal.setAttribute("aria-hidden", "true");
+  }
 }
 
-// PDF View - Helper functions to get display text for dropdown values
+// ------------------------
+// PDF helper functions
+// ------------------------
 function getSupplierText(value) {
   const suppliers = {
     "1": "ABC Supplier",
@@ -246,31 +381,48 @@ function getIssueCategoryText(value) {
 
 function formatProcessApplicable(values) {
   if (!values || !Array.isArray(values) || values.length === 0) return "N/A";
-  
+
   const labels = {
     "supplier-rec-insp": "Supplier or Rec-Insp",
     "wip-production": "WIP Production"
   };
-  
+
   return values.map(v => labels[v] || v).join(", ");
 }
 
+// Kept in case you still want a combined text somewhere else
+function formatEngineeringActions(eng) {
+  if (!eng) return "None selected";
+
+  const actions = [];
+  if (eng.useAsIs)       actions.push("Use As-Is");
+  if (eng.repair)        actions.push("Repair");
+  if (eng.rework)        actions.push("Rework");
+  if (eng.scrap)         actions.push("Scrap");
+  if (eng.custNotifNCR)  actions.push("Customer Notification / NCR");
+  if (eng.drawingReqUpd) actions.push("Drawing / Spec Requires Update");
+
+  return actions.length ? actions.join(", ") : "None selected";
+}
+
+// ------------------------
 // PDF View Modal
+// ------------------------
 function downloadPDF(ncrNumber) {
   const detailsMap = getDetailsMap();
   const details = detailsMap[ncrNumber];
-  
+
   if (!details) {
     alert("NCR details not found.");
     return;
   }
-  
+
   const overlay = document.getElementById("pdf-view-overlay");
   const content = document.getElementById("pdf-view-content");
-  
   if (!overlay || !content) return;
-  
-  // Build the PDF-like content
+
+  const eng = details.engineering || {};
+
   const html = `
     <div class="pdf-section">
       <h3 class="pdf-section-title">NCR Information</h3>
@@ -299,29 +451,39 @@ function downloadPDF(ncrNumber) {
       <div class="pdf-field-group">
         <div class="pdf-field">
           <div class="pdf-field-label">Purchase Order</div>
-          <div class="pdf-field-value ${!details.purchaseOrder ? 'empty' : ''}">${details.purchaseOrder || "Not provided"}</div>
+          <div class="pdf-field-value ${!details.purchaseOrder ? "empty" : ""}">
+            ${details.purchaseOrder || "Not provided"}
+          </div>
         </div>
         <div class="pdf-field">
           <div class="pdf-field-label">Sales Order</div>
-          <div class="pdf-field-value ${!details.salesOrder ? 'empty' : ''}">${details.salesOrder || "Not provided"}</div>
+          <div class="pdf-field-value ${!details.salesOrder ? "empty" : ""}">
+            ${details.salesOrder || "Not provided"}
+          </div>
         </div>
       </div>
     </div>
 
     <div class="pdf-section">
-      <h3 class="pdf-section-title">Supplier & Process</h3>
+      <h3 class="pdf-section-title">Supplier &amp; Process</h3>
       <div class="pdf-field-group">
         <div class="pdf-field">
           <div class="pdf-field-label">Supplier</div>
-          <div class="pdf-field-value">${details.supplierName || getSupplierText(details.supplierValue)}</div>
+          <div class="pdf-field-value">
+            ${details.supplierName || getSupplierText(details.supplierValue)}
+          </div>
         </div>
         <div class="pdf-field">
           <div class="pdf-field-label">Process Type</div>
-          <div class="pdf-field-value">${getProcessTypeText(details.processTypeValue)}</div>
+          <div class="pdf-field-value">
+            ${getProcessTypeText(details.processTypeValue)}
+          </div>
         </div>
         <div class="pdf-field full-width">
           <div class="pdf-field-label">Process Applicable</div>
-          <div class="pdf-field-value">${formatProcessApplicable(details.processApplicable)}</div>
+          <div class="pdf-field-value">
+            ${formatProcessApplicable(details.processApplicable)}
+          </div>
         </div>
       </div>
     </div>
@@ -331,7 +493,9 @@ function downloadPDF(ncrNumber) {
       <div class="pdf-field-group">
         <div class="pdf-field">
           <div class="pdf-field-label">Product</div>
-          <div class="pdf-field-value">${getProductText(details.productValue)}</div>
+          <div class="pdf-field-value">
+            ${getProductText(details.productValue)}
+          </div>
         </div>
         <div class="pdf-field">
           <div class="pdf-field-label">Received Quantity</div>
@@ -343,7 +507,9 @@ function downloadPDF(ncrNumber) {
         </div>
         <div class="pdf-field">
           <div class="pdf-field-label">Item Marked Nonconforming</div>
-          <div class="pdf-field-value">${details.itemNonconforming || "N/A"}</div>
+          <div class="pdf-field-value">
+            ${details.itemNonconforming || "N/A"}
+          </div>
         </div>
       </div>
     </div>
@@ -353,11 +519,15 @@ function downloadPDF(ncrNumber) {
       <div class="pdf-field-group">
         <div class="pdf-field">
           <div class="pdf-field-label">Issue Category</div>
-          <div class="pdf-field-value">${getIssueCategoryText(details.issueCategoryValue)}</div>
+          <div class="pdf-field-value">
+            ${getIssueCategoryText(details.issueCategoryValue)}
+          </div>
         </div>
         <div class="pdf-field full-width">
           <div class="pdf-field-label">Defect Description</div>
-          <div class="pdf-field-value multiline ${!details.defectDescription ? 'empty' : ''}">${details.defectDescription || "No description provided"}</div>
+          <div class="pdf-field-value multiline ${!details.defectDescription ? "empty" : ""}">
+            ${details.defectDescription || "No description provided"}
+          </div>
         </div>
       </div>
     </div>
@@ -375,8 +545,63 @@ function downloadPDF(ncrNumber) {
         </div>
       </div>
     </div>
+
+    <!-- ENGINEERING SECTION WITH YES/NO FIELDS -->
+    <div class="pdf-section">
+      <h3 class="pdf-section-title">Engineering</h3>
+
+      <div class="pdf-field-group">
+        <div class="pdf-field">
+          <div class="pdf-field-label">Use As-Is</div>
+          <div class="pdf-field-value">${eng.useAsIs ? "Yes" : "No"}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Repair</div>
+          <div class="pdf-field-value">${eng.repair ? "Yes" : "No"}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Rework</div>
+          <div class="pdf-field-value">${eng.rework ? "Yes" : "No"}</div>
+        </div>
+      </div>
+
+      <div class="pdf-field-group">
+        <div class="pdf-field">
+          <div class="pdf-field-label">Scrap</div>
+          <div class="pdf-field-value">${eng.scrap ? "Yes" : "No"}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Customer Notification / NCR</div>
+          <div class="pdf-field-value">${eng.custNotifNCR ? "Yes" : "No"}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Drawing / Spec Requires Update</div>
+          <div class="pdf-field-value">${eng.drawingReqUpd ? "Yes" : "No"}</div>
+        </div>
+      </div>
+
+      <div class="pdf-field-group">
+        <div class="pdf-field full-width">
+          <div class="pdf-field-label">Disposition</div>
+          <div class="pdf-field-value multiline">${eng.disposition || "N/A"}</div>
+        </div>
+      </div>
+
+      <div class="pdf-field-group">
+        <div class="pdf-field">
+          <div class="pdf-field-label">Engineer</div>
+          <div class="pdf-field-value">${eng.nameOfEng || "N/A"}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Engineering Date</div>
+          <div class="pdf-field-value">
+            ${eng.engDate || eng.engineeringDate || eng.engDateValue || "N/A"}
+          </div>
+        </div>
+      </div>
+    </div>
   `;
-  
+
   content.innerHTML = html;
   overlay.classList.add("active");
   overlay.setAttribute("aria-hidden", "false");
@@ -390,8 +615,9 @@ function closePDFView() {
   }
 }
 
-// Filters 
-
+// ------------------------
+// Filters
+// ------------------------
 function getSupplierFilterText() {
   const el =
     document.querySelector("#ncr-search") ||
@@ -400,43 +626,56 @@ function getSupplierFilterText() {
     document.querySelector('input[name="search-supplier"]') ||
     document.querySelector('input[data-filter="supplier"]') ||
     document.querySelector('input[placeholder*="supplier" i]');
+
   return (el?.value || "").trim().toLowerCase();
+}
+
+function getWorkflowFilterValue() {
+  const sel = document.getElementById("workflow-filter");
+  return (sel && sel.value) || "";
 }
 
 function getActiveDataset() {
   const status = document.querySelector('input[name="ncr-active"]:checked')?.value;
   if (status === "archived") {
-    // mark archived rows explicitly
     return ncrArchivedData.map(r => Object.assign({}, r, { archived: true }));
   }
   if (status === "all") {
-    // return active then archived, annotate each with archived flag
     return ncrData.map(r => Object.assign({}, r, { archived: false }))
       .concat(ncrArchivedData.map(r => Object.assign({}, r, { archived: true })));
   }
-  // default: active
   return ncrData.map(r => Object.assign({}, r, { archived: false }));
 }
 
 function filterNCRData(page = 1) {
-  const supplierTerm = getSupplierFilterText(); 
+  const supplierTerm = getSupplierFilterText();
+  const workflowFilter = getWorkflowFilterValue(); // "", "completed", "quality", "engineering"
   const activeSet = getActiveDataset();
   const detailsMap = getDetailsMap();
 
-  if (supplierTerm === "") {
-    ncrFilteredData = activeSet.slice();
-  } else {
-    ncrFilteredData = activeSet.filter(r => {
-      const baseName = (r.supplier || "").toLowerCase();
-      const detailsName = (detailsMap[r.ncrNumber]?.supplierName || "").toLowerCase();
-      return baseName === supplierTerm || detailsName === supplierTerm;
-    });
-  }
+  ncrFilteredData = activeSet.filter(r => {
+    const details = detailsMap[r.ncrNumber];
+    const wfInfo = getWorkflowInfo(details);
+
+    const baseName = (r.supplier || "").toLowerCase();
+    const detailsName = (details?.supplierName || "").toLowerCase();
+    const matchesSupplier =
+      !supplierTerm ||
+      baseName === supplierTerm ||
+      detailsName === supplierTerm;
+
+    if (!matchesSupplier) return false;
+
+    if (!workflowFilter) return true; // all stages
+    return wfInfo.stage === workflowFilter;
+  });
 
   renderNCRTable(page);
 }
 
-// Populate supplier dropdown with unique suppliers
+// ------------------------
+// Populate supplier dropdown
+// ------------------------
 function populateSupplierDropdown() {
   const dropdown = document.querySelector("#ncr-search");
   if (!dropdown) return;
@@ -455,26 +694,27 @@ function populateSupplierDropdown() {
   const suppliers = Array.from(suppliersSet).sort();
   dropdown.innerHTML = '<option value="">All Suppliers</option>';
   suppliers.forEach(supplier => {
-    const option = document.createElement('option');
+    const option = document.createElement("option");
     option.value = supplier.toLowerCase();
     option.textContent = supplier;
     dropdown.appendChild(option);
   });
 }
 
-// UI setup 
+// ------------------------
+// UI setup
+// ------------------------
 function setupFilterEventListener() {
-  const filterButton = document.getElementById("btnFilter")
-                    || document.querySelector('button[data-action="apply-filters"]');
-  if (filterButton) filterButton.addEventListener("click", () => filterNCRData(1));
-
-  // Apply filtering when dropdown changes
   const searchEl = document.querySelector("#ncr-search");
   if (searchEl) {
-    searchEl.addEventListener('change', () => filterNCRData(1));
+    searchEl.addEventListener("change", () => filterNCRData(1));
   }
 
-  // Filter when the active/archived/all radios change
+  const workflowSel = document.getElementById("workflow-filter");
+  if (workflowSel) {
+    workflowSel.addEventListener("change", () => filterNCRData(1));
+  }
+
   document.querySelectorAll('input[name="ncr-active"]').forEach(r => {
     r.addEventListener("change", () => filterNCRData(1));
   });
@@ -486,9 +726,15 @@ function setupFilterEventListener() {
 }
 
 function setupModalEventListeners() {
-  const cancelArchive = document.getElementById("cancel-archive"); if (cancelArchive) cancelArchive.addEventListener("click", closeArchiveModal);
-  const cancelUnarchive = document.getElementById("cancel-unarchive"); if (cancelUnarchive) cancelUnarchive.addEventListener("click", closeUnarchiveModal);
-  const closePDFButton = document.getElementById("close-pdf-view"); if (closePDFButton) closePDFButton.addEventListener("click", closePDFView);
+  const cancelArchive = document.getElementById("cancel-archive");
+  if (cancelArchive) cancelArchive.addEventListener("click", closeArchiveModal);
+
+  const cancelUnarchive = document.getElementById("cancel-unarchive");
+  if (cancelUnarchive) cancelUnarchive.addEventListener("click", closeUnarchiveModal);
+
+  const closePDFButton = document.getElementById("close-pdf-view");
+  if (closePDFButton) closePDFButton.addEventListener("click", closePDFView);
+
   window.addEventListener("click", (e) => {
     const archiveModal = document.getElementById("archive-modal");
     const unarchiveModal = document.getElementById("unarchive-modal");
@@ -499,7 +745,9 @@ function setupModalEventListeners() {
   });
 }
 
-// Initialize on load
+// ------------------------
+// Init on load
+// ------------------------
 document.addEventListener("DOMContentLoaded", function () {
   const checked = document.querySelector('input[name="ncr-active"]:checked');
   if (!checked) {
@@ -519,7 +767,9 @@ document.addEventListener("DOMContentLoaded", function () {
   filterNCRData(1);
 });
 
-// Edit navigation helper 
+// ------------------------
+// Edit navigation helper
+// ------------------------
 function openEdit(ncrNumber, dateCreated, supplier) {
   const params = new URLSearchParams({ ncr: ncrNumber, dateCreated, supplier });
   window.location.href = `edit.html?${params.toString()}`;

@@ -17,8 +17,8 @@
 * [X] Add a **Supplier dropdown** in the filter section (using NCR Supplier data).
 * [X] Display **records per page** control at the bottom of the page.
 * [X] Improve **contrast** between the **Edit** and **Archive** buttons for better visibility.
-* [ ] Include a **column showing progress** — indicate which department (QA / Engineering) is currently handling the NCR.
-* [ ] Add a **“Sort by Progress”** option to organize NCRs by their current workflow stage.
+* [X] Include a **column showing progress** — indicate which department (QA / Engineering) is currently handling the NCR.
+* [X] Add a **“Sort by Progress”** option to organize NCRs by their current workflow stage.
 
 ---
 
@@ -35,8 +35,8 @@
 
 * [X] Allow saving **partially completed NCRs** (add a separate button for “Save Progress”).
 * [X] Keep **“Mark as Completed”** as a final step for full completion.
-* [ ] Before allowing completion, users must **review the NCR** summary page.
-* [ ] Add a **Text Preview page** that displays a read-only text version of the NCR before confirming completion.
+* [X] Before allowing completion, users must **review the NCR** summary page.
+* [X] Add a **Text Preview page** that displays a read-only text version of the NCR before confirming completion.
 * [X] Provide **success feedback** when saving (e.g., message: “NCR successfully saved”).
 
 ---
@@ -50,7 +50,7 @@
 
 Notes after meeting on 11-12
 
-* [ ] Don't mark the entire NCR as completed, but instead mark as section completed and ready for next worker, disabling the complete section and enable the next
-* [ ] When a section is completed, add a confirmation modal that displays all inputted information
-* [ ] Add a column to display what worker needs to add to the ncr next
-* [ ] PDF option should only be present when a NCR record is fully complet, when user click Mark As Completed
+* [X] Don't mark the entire NCR as completed, but instead mark as section completed and ready for next worker, disabling the complete section and enable the next
+* [X] When a section is completed, add a confirmation modal that displays all inputted information
+* [X] Add a column to display what worker needs to add to the ncr next
+* [X] PDF option should only be present when a NCR record is fully complet, when user click Mark As Completed

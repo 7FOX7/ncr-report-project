@@ -32,7 +32,19 @@ function formatCheckboxValues(values) {
 function showPreviewModal(formData) {
   const modal = document.getElementById("previewModal");
   const content = document.getElementById("previewContent");
-  
+
+  // -------------------- Engineering preview helpers (ADDED) --------------------
+  const eng = formData.engineering || {};
+  const engActions = [];
+  if (eng.useAsIs)  engActions.push("Use as-is");
+  if (eng.repair)   engActions.push("Repair");
+  if (eng.rework)   engActions.push("Rework");
+  if (eng.scrap)    engActions.push("Scrap");
+  if (eng.custNotifNCR) engActions.push("Customer Notified");
+  const engExtraFlags = [];
+  if (eng.drawingReqUpd) engExtraFlags.push("Drawing Update Required");
+  // ------------------ End engineering preview helpers (ADDED) ------------------
+
   const html = `
     <div class="preview-section">
       <h3 class="preview-section-title">NCR Header Information</h3>
@@ -105,6 +117,69 @@ function showPreviewModal(formData) {
         <div class="preview-value multiline ${!formData.defectDescription ? 'empty' : ''}">${formData.defectDescription || "No description provided"}</div>
       </div>
     </div>
+
+    <!-- ---------------- Engineering Disposition Preview (ADDED) ---------------- -->
+    <div class="preview-section">
+      <h3 class="preview-section-title">Engineering Disposition & Actions</h3>
+      <div class="preview-grid">
+        <div class="preview-item">
+          <div class="preview-label">Disposition Choices</div>
+          <div class="preview-value ${engActions.length === 0 ? 'empty' : ''}">
+            ${engActions.length ? engActions.join(", ") : "No disposition selected"}
+          </div>
+        </div>
+
+        <div class="preview-item">
+          <div class="preview-label">Disposition Notes</div>
+          <div class="preview-value multiline ${!eng.disposition ? 'empty' : ''}">
+            ${eng.disposition || "No notes provided"}
+          </div>
+        </div>
+
+        <div class="preview-item">
+          <div class="preview-label">Engineer Name</div>
+          <div class="preview-value ${!eng.nameOfEng ? 'empty' : ''}">
+            ${eng.nameOfEng || "Not provided"}
+          </div>
+        </div>
+
+        <div class="preview-item">
+          <div class="preview-label">Original Rev #</div>
+          <div class="preview-value ${!eng.origRevNum ? 'empty' : ''}">
+            ${eng.origRevNum || "Not provided"}
+          </div>
+        </div>
+
+        <div class="preview-item">
+          <div class="preview-label">Updated Revision (Date/Time)</div>
+          <div class="preview-value ${!eng.UpdatedRev ? 'empty' : ''}">
+            ${eng.UpdatedRev || "Not provided"}
+          </div>
+        </div>
+
+        <div class="preview-item">
+          <div class="preview-label">Revision Date</div>
+          <div class="preview-value ${!eng.RevisionDate ? 'empty' : ''}">
+            ${eng.RevisionDate || "Not provided"}
+          </div>
+        </div>
+
+        <div class="preview-item">
+          <div class="preview-label">Submitted Date</div>
+          <div class="preview-value ${!eng.submittedDate ? 'empty' : ''}">
+            ${eng.submittedDate || "Not provided"}
+          </div>
+        </div>
+
+        <div class="preview-item">
+          <div class="preview-label">Drawing / Extra Actions</div>
+          <div class="preview-value ${(engExtraFlags.length === 0) ? 'empty' : ''}">
+            ${engExtraFlags.length ? engExtraFlags.join(", ") : "No additional actions"}
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- -------------- End Engineering Disposition Preview (ADDED) -------------- -->
   `;
   
   content.innerHTML = html;
@@ -576,6 +651,9 @@ function validateAndShowPreview() {
   const processTypeText = getSelectText("process-type-id");
   const itemNonconforming = getSingleCheckboxValue("item-nonconforming");
   const processApplicable = getCheckboxValues("process-applicable");
+
+  // Read engineering section for preview (ADDED)
+  const engineering = readEngineeringFromForm();
   
   // Clear any previous validation errors
   clearAllValidation();
@@ -651,7 +729,8 @@ function validateAndShowPreview() {
     issueCategory: issueCategoryText,
     defectDescription: defectDesc,
     inspectedBy,
-    inspectedOn
+    inspectedOn,
+    engineering          // ADDED
   };
   
   showPreviewModal(formData);
@@ -717,18 +796,18 @@ function performUpdate(isCompleted = false, stayHere = false) {
       return;
     }
 
-    const recvQty   = Number(recvQtyStr);
-    const defectQty = Number(defectQtyStr);
-    if (!Number.isFinite(recvQty) || recvQty <= 0) { 
+    const recvQtyChecked   = Number(recvQtyStr);
+    const defectQtyChecked = Number(defectQtyStr);
+    if (!Number.isFinite(recvQtyChecked) || recvQtyChecked <= 0) { 
       showValidationError("recv-qty", "Enter a valid received quantity (number > 0)."); 
       return; 
     }
-    if (!Number.isFinite(defectQty) || defectQty < 0) { 
+    if (!Number.isFinite(defectQtyChecked) || defectQtyChecked < 0) { 
       showValidationError("defect-qty", "Enter a valid defective quantity (number ≥ 0)."); 
       return; 
     }
     //defective cannot exceed received
-    if (defectQty > recvQty) { 
+    if (defectQtyChecked > recvQtyChecked) { 
       showValidationError("defect-qty", "Defective quantity cannot be greater than received quantity."); 
       return; 
     }

@@ -9,14 +9,17 @@
   <body>
     <header role="banner">
       <div class="header-container">
-        <img src="../assets/Crossfire Logo - no bkgd.png" alt="NCR Management System Logo" class="logo" draggable="false">
-        
-        <!-- Hamburger menu toggle (hidden checkbox) -->
+        <img src="../assets/Crossfire Logo - no bkgd.png"
+             alt="NCR Management System Logo"
+             class="logo"
+             draggable="false">
+
+        <!-- Hamburger menu toggle -->
         <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation menu">
         <label for="nav-toggle" class="nav-toggle-label">
           <span class="hamburger"></span>
         </label>
-        
+
         <nav role="navigation" aria-label="Main navigation" class="nav">
           <ul>
             <li><a href="index.html" aria-current="page">Home</a></li>
@@ -35,67 +38,78 @@
     <main role="main">
       <h1>Non-Conformance Report Management</h1>
 
+      <!-- ACTIONS / FILTERS -->
       <section class="actions-section" aria-labelledby="actions-heading">
         <h2 id="actions-heading" class="sr-only">NCR Actions</h2>
-        
-        <!-- Create button moved to the NCR Records header -->
 
         <div class="search-section">
-          <!-- Collapsible search toggle -->
-          
-          <input type="checkbox" id="search-toggle" class="search-toggle" aria-label="Toggle search section">
+          <input type="checkbox"
+                 id="search-toggle"
+                 class="search-toggle"
+                 aria-label="Toggle search section">
           <label for="search-toggle" class="search-toggle-label">
             <span class="search-toggle-text">Search Filters</span>
             <span class="search-toggle-icon" aria-hidden="true">▼</span>
           </label>
-            
-            <!-- Collapsible search content -->
-          <div class="search-content">
 
+          <div class="search-content">
             <div class="search-columns">
+
+              <!-- LEFT COLUMN: Supplier + Workflow Stage -->
               <div class="form-column">
-                <label for="ncr-search" class="search-label sr-only">Search NCR by Supplier:</label>
+                <!-- Supplier Filter (original) -->
+                <label for="ncr-search" class="search-label">Supplier</label>
                 <select id="ncr-search" name="ncr-search" aria-describedby="search-help">
                   <option value="">All Suppliers</option>
                 </select>
                 <p id="search-help" class="search-help">Filter NCR records by supplier</p>
+
+                <!-- NEW: Workflow Stage Filter -->
+                <label for="workflow-filter" class="search-label">Workflow Stage</label>
+                <select id="workflow-filter" name="workflow-filter" aria-describedby="workflow-help">
+                  <option value="">All stages</option>
+                  <option value="completed">Completed</option>
+                  <option value="quality">Quality Inspector</option>
+                  <option value="engineering">Engineering</option>
+                </select>
+                <p id="workflow-help" class="search-help">
+                  Filter NCRs by the next workflow stage (Quality Inspector or Engineering).
+                </p>
               </div>
-              
+
+              <!-- RIGHT COLUMN: Active / Archived / All -->
               <div class="form-column">
                 <div class="search-row end-align">
-                  <input type="radio" id="search-active" name="ncr-active" value="active" checked="checked" aria-describedby="status-help" tabindex="0">
+                  <input type="radio" id="search-active" name="ncr-active" value="active" checked>
                   <label for="search-active" class="search-label">Active records</label>
                 </div>
 
                 <div class="search-row end-align">
-                  <input type="radio" id="search-archived" name="ncr-active" value="archived" aria-describedby="status-help" tabindex="0">
+                  <input type="radio" id="search-archived" name="ncr-active" value="archived">
                   <label for="search-archived" class="search-label">Archived records</label>
                 </div>
 
                 <div class="search-row end-align">
-                  <input type="radio" id="search-all" name="ncr-active" value="all" aria-describedby="status-help" tabindex="0">
+                  <input type="radio" id="search-all" name="ncr-active" value="all">
                   <label for="search-all" class="search-label">All records</label>
                 </div>
 
-                <p id="status-help" class="status-help">View active or archived NCR records</p>
+                <p id="status-help" class="status-help">
+                  View active or archived NCR records
+                </p>
               </div>
 
-              <!-- records-per-page moved into pagination controls -->
-            </div> 
-
-            <!-- Filters apply instantly as you type/change options -->
+            </div>
           </div>
         </div>
       </section>
 
+      <!-- NCR LIST -->
       <section class="ncr-list-section" aria-labelledby="ncr-list-heading">
         <div class="ncr-list-header">
           <h2 id="ncr-list-heading">NCR Records</h2>
           <div class="ncr-list-actions">
-            <a href="create.html" class="btn btn-primary" role="button" aria-describedby="create-description">
-              Create New NCR
-            </a>
-            <p id="create-description" class="action-description sr-only">Start a new Non-Conformance Report</p>
+            <a href="create.html" class="btn btn-primary" role="button">Create New NCR</a>
           </div>
         </div>
 
@@ -107,55 +121,63 @@
                 <th scope="col">Date Created</th>
                 <th scope="col">Last Modified</th>
                 <th scope="col">Supplier</th>
+                <!-- NEW COLUMN: workflow / stage -->
+                <th scope="col">Workflow Stage</th>
                 <th scope="col">Actions</th>
               </tr>
             </thead>
             <tbody>
+              <!-- Rows injected by ncr-data.js -->
             </tbody>
           </table>
         </div>
-        
+
         <!-- Pagination -->
         <nav aria-label="NCR Records Pagination" class="pagination-nav">
           <div class="pagination-info">
-            <span id="pagination-text" class="pagination-text">Showing <strong>1-5</strong> of <strong>7</strong> NCRs</span>
+            <span id="pagination-text" class="pagination-text">
+              Showing <strong>1-5</strong> of <strong>0</strong> NCRs
+            </span>
           </div>
-          
+
           <div class="pagination-controls">
-            <button type="button" class="pagination-btn pagination-btn-prev" disabled aria-label="Go to previous page">
+            <button type="button" class="pagination-btn pagination-btn-prev" disabled>
               <span aria-hidden="true">‹</span>
               <span class="pagination-btn-text">Previous</span>
             </button>
-            
-            <div class="pagination-pages">
-              <button type="button" class="pagination-btn pagination-btn-page active" aria-label="Page 1" aria-current="page">1</button>
-              <button type="button" class="pagination-btn pagination-btn-page" aria-label="Page 2">2</button>
-            </div>
-            
-            <button type="button" class="pagination-btn pagination-btn-next" aria-label="Go to next page">
+
+            <div class="pagination-pages"></div>
+
+            <button type="button" class="pagination-btn pagination-btn-next">
               <span class="pagination-btn-text">Next</span>
               <span aria-hidden="true">›</span>
             </button>
+
             <div class="records-per-page-container">
-              <select name="search-amount" id="search-amount" class="records-per-page-select" aria-describedby="records-help" aria-label="Records per page">
+              <select name="search-amount" id="search-amount" class="records-per-page-select">
                 <option value="5">5</option>
                 <option value="10">10</option>
                 <option value="15">15</option>
               </select>
-              <p id="records-help" class="records-help sr-only">Amount of records displayed per page</p>
             </div>
           </div>
         </nav>
       </section>
-      <!-- Archive modal -->
-      <div id="archive-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="archive-modal-title" aria-describedby="archive-modal-description">
+
+      <!-- ARCHIVE MODAL -->
+      <div id="archive-modal" class="modal">
         <div class="modal-content">
           <div class="modal-header">
             <h3 id="archive-modal-title">Confirm Archive</h3>
           </div>
           <div class="modal-body">
-            <p id="archive-modal-description">Are you sure you want to archive NCR <strong id="archive-ncr-number"></strong>?</p>
-            <p class="modal-warning">You can restore the NCR from the archive within 90 days of deletion.</p>
+            <p id="archive-modal-description">
+              Are you sure you want to archive NCR
+              <strong id="archive-ncr-number"></strong>?
+            </p>
+            <p class="modal-warning">
+              You can restore the NCR from the archive within 90 days of deletion.
+            </p>
           </div>
           <div class="modal-footer">
             <button type="button" id="cancel-archive" class="btn btn-secondary">Cancel</button>
@@ -164,15 +186,20 @@
         </div>
       </div>
 
-      <!-- Un-archive modal -->
-      <div id="unarchive-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="unarchive-modal-title" aria-describedby="unarchive-modal-description">
+      <!-- UNARCHIVE MODAL -->
+      <div id="unarchive-modal" class="modal">
         <div class="modal-content">
           <div class="modal-header">
             <h3 id="unarchive-modal-title">Confirm Un-archive</h3>
           </div>
           <div class="modal-body">
-            <p id="unarchive-modal-description">Are you sure you want to un-archive NCR <strong id="unarchive-ncr-number"></strong> and move it back to active records?</p>
-            <p class="modal-warning">This will make the NCR editable again.</p>
+            <p>
+              Are you sure you want to un-archive NCR
+              <strong id="unarchive-ncr-number"></strong>?
+            </p>
+            <p class="modal-warning">
+              This will make the NCR editable again.
+            </p>
           </div>
           <div class="modal-footer">
             <button type="button" id="cancel-unarchive" class="btn btn-secondary">Cancel</button>
@@ -181,28 +208,29 @@
         </div>
       </div>
 
-      <!-- PDF View Modal -->
-      <div id="pdf-view-overlay" class="pdf-view-overlay" role="dialog" aria-labelledby="pdf-view-title" aria-modal="true">
+      <!-- PDF VIEW MODAL -->
+      <div id="pdf-view-overlay" class="pdf-view-overlay">
         <div class="pdf-view-container">
           <div class="pdf-view-header">
             <h2 id="pdf-view-title" class="pdf-view-title">Non-Conformance Report</h2>
-            <button type="button" class="pdf-view-close" aria-label="Close PDF view" id="close-pdf-view">&times;</button>
+            <button type="button" class="pdf-view-close" id="close-pdf-view">&times;</button>
           </div>
-          <div class="pdf-view-body" id="pdf-view-content">
-            <!-- Content will be populated dynamically -->
-          </div>
+          <div class="pdf-view-body" id="pdf-view-content"></div>
           <div class="pdf-view-footer">
-            <p>NCR Management System &copy; 2025</p>
+            <p>NCR Management System © 2025</p>
           </div>
         </div>
       </div>
-      <!-- TODO: add pagination -->
+
     </main>
+
     <footer role="contentinfo" class="footer">
-      <div>
-        <p>&copy; 2025 NCR Management System. All rights reserved.</p>
-      </div>
+      <div>
+        <p>&copy; 2025 NCR Management System. All rights reserved.</p>
+      </div>
     </footer>
+
+    <!-- PAGE SCRIPTS -->
     <script src="../code/ncr-data.js"></script>
     <script src="../code/pagination.js"></script>
   </body>
