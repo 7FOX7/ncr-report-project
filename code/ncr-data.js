@@ -1,12 +1,21 @@
 let ncrData = (window.ncrData && Array.isArray(window.ncrData)) ? window.ncrData : [
   { id: 1, ncrNumber: "2025-611", dateCreated: "2025-10-01", lastModified: "2025-10-05", supplier: "BlueHaven Distributors" },
   { id: 2, ncrNumber: "2025-325", dateCreated: "2025-10-02", lastModified: "2025-10-06", supplier: "Apex Global Trading" },
-  { id: 3, ncrNumber: "2025-242", dateCreated: "2025-10-01", lastModified: "2025-10-11", supplier: "SilverOak Importers" }
+  { id: 3, ncrNumber: "2025-242", dateCreated: "2025-10-01", lastModified: "2025-10-11", supplier: "SilverOak Importers" },
+  { id: 4, ncrNumber: "2025-789", dateCreated: "2025-10-15", lastModified: "2025-10-15", supplier: "Apex Global Trading" },
+  { id: 5, ncrNumber: "2025-456", dateCreated: "2025-10-20", lastModified: "2025-10-22", supplier: "TechParts Inc" },
+  { id: 8, ncrNumber: "2025-912", dateCreated: "2025-11-01", lastModified: "2025-11-08", supplier: "BlueHaven Distributors" },
+  { id: 9, ncrNumber: "2025-334", dateCreated: "2025-11-05", lastModified: "2025-11-12", supplier: "SilverOak Importers" },
+  { id: 10, ncrNumber: "2025-128", dateCreated: "2025-11-10", lastModified: "2025-11-15", supplier: "Precision Manufacturing" },
+  { id: 11, ncrNumber: "2025-567", dateCreated: "2025-11-12", lastModified: "2025-11-12", supplier: "TechParts Inc" },
+  { id: 12, ncrNumber: "2025-890", dateCreated: "2025-11-15", lastModified: "2025-11-17", supplier: "Quality Components Ltd" }
 ];
 
 let ncrArchivedData = (window.ncrArchivedData && Array.isArray(window.ncrArchivedData)) ? window.ncrArchivedData : [
   { id: 6, ncrNumber: "2025-623", dateCreated: "2025-10-05", lastModified: "2025-10-13", supplier: "SilverOak Importers" },
-  { id: 7, ncrNumber: "2025-845", dateCreated: "2025-10-02", lastModified: "2025-10-07", supplier: "BlueHaven Distributors" }
+  { id: 7, ncrNumber: "2025-845", dateCreated: "2025-10-02", lastModified: "2025-10-07", supplier: "BlueHaven Distributors" },
+  { id: 13, ncrNumber: "2025-199", dateCreated: "2025-09-20", lastModified: "2025-09-28", supplier: "Apex Global Trading" },
+  { id: 14, ncrNumber: "2025-077", dateCreated: "2025-09-15", lastModified: "2025-09-22", supplier: "TechParts Inc" }
 ];
 
 let ncrFilteredData = ncrData.slice();
@@ -20,6 +29,219 @@ function loadJSON(key, fallback) {
   } catch {
     return fallback;
   }
+}
+
+function saveJSON(key, data) {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (e) {
+    console.error("Failed to save to localStorage:", e);
+  }
+}
+
+// ------------------------
+// Seed sample details for demo/testing
+// ------------------------
+function seedSampleDetails() {
+  const detailsMap = getDetailsMap();
+  
+  // Only seed if ncrDetails is empty or doesn't have our sample data
+  if (Object.keys(detailsMap).length > 0) return;
+  
+  const sampleDetails = {
+    // Brand new NCR - just created, no inspection yet
+    "2025-789": {
+      ncrNumber: "2025-789",
+      dateCreated: "2025-10-15",
+      lastModified: "2025-10-15",
+      supplierName: "Apex Global Trading",
+      purchaseOrder: "PO-2025-789",
+      salesOrder: "",
+      processTypeValue: "1",
+      processApplicable: ["supplier-rec-insp"],
+      status: "Open"
+    },
+    
+    // Partially filled by Quality Inspector - not yet marked complete
+    "2025-456": {
+      ncrNumber: "2025-456",
+      dateCreated: "2025-10-20",
+      lastModified: "2025-10-22",
+      supplierName: "TechParts Inc",
+      purchaseOrder: "PO-2025-456",
+      salesOrder: "SO-456-A",
+      processTypeValue: "1",
+      processApplicable: ["supplier-rec-insp", "wip-production"],
+      productValue: "1",
+      recvQty: 500,
+      defectQty: 25,
+      itemNonconforming: "Yes",
+      issueCategoryValue: "1",
+      defectDescription: "Surface scratches on 25 units, coating appears uneven",
+      inspectedBy: "Jane Smith",
+      inspectedOn: "2025-10-22",
+      status: "Open",
+      qualityCompleted: false
+    },
+    
+    // Quality Inspector completed - awaiting Engineering
+    "2025-912": {
+      ncrNumber: "2025-912",
+      dateCreated: "2025-11-01",
+      lastModified: "2025-11-08",
+      supplierName: "BlueHaven Distributors",
+      purchaseOrder: "PO-2025-912",
+      salesOrder: "SO-912-B",
+      processTypeValue: "2",
+      processApplicable: ["supplier-rec-insp"],
+      productValue: "2",
+      recvQty: 1000,
+      defectQty: 50,
+      itemNonconforming: "Yes",
+      issueCategoryValue: "2",
+      defectDescription: "Packaging damaged during shipment, 50 boxes crushed",
+      inspectedBy: "Mike Johnson",
+      inspectedOn: "2025-11-08",
+      status: "Open",
+      qualityCompleted: true
+    },
+    
+    // Engineering in progress - some actions selected but not complete
+    "2025-334": {
+      ncrNumber: "2025-334",
+      dateCreated: "2025-11-05",
+      lastModified: "2025-11-12",
+      supplierName: "SilverOak Importers",
+      purchaseOrder: "PO-2025-334",
+      salesOrder: "SO-334-C",
+      processTypeValue: "1",
+      processApplicable: ["wip-production"],
+      productValue: "1",
+      recvQty: 750,
+      defectQty: 100,
+      itemNonconforming: "Yes",
+      issueCategoryValue: "1",
+      defectDescription: "Dimensional tolerance out of spec on 100 parts, measurements 0.5mm over",
+      inspectedBy: "Sarah Lee",
+      inspectedOn: "2025-11-10",
+      status: "Open",
+      qualityCompleted: true,
+      engineering: {
+        useAsIs: false,
+        repair: true,
+        rework: false,
+        scrap: false,
+        custNotifNCR: false,
+        drawingReqUpd: false,
+        disposition: "",
+        nameOfEng: "",
+        engDate: ""
+      }
+    },
+    
+    // Engineering completed but not marked final
+    "2025-128": {
+      ncrNumber: "2025-128",
+      dateCreated: "2025-11-10",
+      lastModified: "2025-11-15",
+      supplierName: "Precision Manufacturing",
+      purchaseOrder: "PO-2025-128",
+      salesOrder: "SO-128-D",
+      processTypeValue: "1",
+      processApplicable: ["supplier-rec-insp"],
+      productValue: "2",
+      recvQty: 300,
+      defectQty: 15,
+      itemNonconforming: "Yes",
+      issueCategoryValue: "3",
+      defectDescription: "Missing certifications and documentation for 15 units",
+      inspectedBy: "Tom Davis",
+      inspectedOn: "2025-11-12",
+      status: "Open",
+      qualityCompleted: true,
+      engineering: {
+        useAsIs: false,
+        repair: false,
+        rework: true,
+        scrap: false,
+        custNotifNCR: true,
+        drawingReqUpd: false,
+        disposition: "Rework items to meet specification requirements. Customer has been notified of delay.",
+        nameOfEng: "Robert Chen",
+        engDate: "2025-11-15"
+      }
+    },
+    
+    // Fully completed NCR
+    "2025-567": {
+      ncrNumber: "2025-567",
+      dateCreated: "2025-11-12",
+      lastModified: "2025-11-12",
+      supplierName: "TechParts Inc",
+      purchaseOrder: "PO-2025-567",
+      salesOrder: "SO-567-E",
+      processTypeValue: "1",
+      processApplicable: ["supplier-rec-insp"],
+      productValue: "1",
+      recvQty: 200,
+      defectQty: 10,
+      itemNonconforming: "Yes",
+      issueCategoryValue: "1",
+      defectDescription: "Minor cosmetic defects on 10 units, does not affect functionality",
+      inspectedBy: "Lisa Brown",
+      inspectedOn: "2025-11-12",
+      status: "Closed",
+      qualityCompleted: true,
+      isCompleted: true,
+      engineering: {
+        useAsIs: true,
+        repair: false,
+        rework: false,
+        scrap: false,
+        custNotifNCR: false,
+        drawingReqUpd: false,
+        disposition: "Approved for use as-is. Cosmetic defects do not impact performance or safety.",
+        nameOfEng: "Emily White",
+        engDate: "2025-11-12"
+      }
+    },
+    
+    // Another completed NCR with different actions
+    "2025-890": {
+      ncrNumber: "2025-890",
+      dateCreated: "2025-11-15",
+      lastModified: "2025-11-17",
+      supplierName: "Quality Components Ltd",
+      purchaseOrder: "PO-2025-890",
+      salesOrder: "SO-890-F",
+      processTypeValue: "2",
+      processApplicable: ["wip-production"],
+      productValue: "2",
+      recvQty: 600,
+      defectQty: 80,
+      itemNonconforming: "Yes",
+      issueCategoryValue: "1",
+      defectDescription: "Critical defect: material hardness below specification on 80 units",
+      inspectedBy: "Kevin Martinez",
+      inspectedOn: "2025-11-16",
+      status: "Closed",
+      qualityCompleted: true,
+      isCompleted: true,
+      engineering: {
+        useAsIs: false,
+        repair: false,
+        rework: false,
+        scrap: true,
+        custNotifNCR: true,
+        drawingReqUpd: true,
+        disposition: "Scrap all non-conforming units. Customer notified. Specification requires update to include hardness testing requirements.",
+        nameOfEng: "David Kim",
+        engDate: "2025-11-17"
+      }
+    }
+  };
+  
+  saveJSON("ncrDetails", sampleDetails);
 }
 
 // ------------------------
@@ -801,6 +1023,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (r) r.checked = true;
   }
 
+  seedSampleDetails();
   mergeIncomingRecords();
   applyEdits();
 
