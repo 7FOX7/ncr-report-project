@@ -192,7 +192,7 @@ function seedSampleDetails() {
       inspectedOn: "2025-11-12",
       status: "Closed",
       qualityCompleted: true,
-      isCompleted: true,
+      isCompleted: false,
       engineering: {
         useAsIs: true,
         repair: false,
@@ -226,7 +226,7 @@ function seedSampleDetails() {
       inspectedOn: "2025-11-16",
       status: "Closed",
       qualityCompleted: true,
-      isCompleted: true,
+      isCompleted: false,
       engineering: {
         useAsIs: false,
         repair: false,
