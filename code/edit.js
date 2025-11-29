@@ -432,21 +432,15 @@ function clearValidation(elementId) {
   }
 }
 
-function showValidationError(elementId, message) {
+function showValidationError(elementId, message, shouldFocus = false) {
   const element = document.getElementById(elementId);
   if (element) {
-    const fieldsetContent = element.closest('.fieldset-content');
-    const isFieldVisible = fieldsetContent && window.getComputedStyle(fieldsetContent).maxHeight !== '0px';
-    
-    if (!isFieldVisible) {
-      alert("Please check all form sections. There are required fields in other sections that need to be completed.");
-      
-      const fieldset = element.closest('.collapsible-fieldset');
-      if (fieldset) {
-        const toggleInput = fieldset.querySelector('.fieldset-toggle');
-        if (toggleInput) {
-          toggleInput.checked = true;
-        }
+    // Find and open the accordion containing this field
+    const fieldset = element.closest('.collapsible-fieldset');
+    if (fieldset) {
+      const toggleInput = fieldset.querySelector('.fieldset-toggle');
+      if (toggleInput) {
+        toggleInput.checked = true;
       }
     }
     
@@ -473,7 +467,11 @@ function showValidationError(elementId, message) {
       element.addEventListener('input', clearValidationHandler);
       element.addEventListener('change', clearValidationHandler);
     }
-    element.focus();
+    
+    // Only focus on the first invalid field
+    if (shouldFocus) {
+      element.focus();
+    }
   }
 }
 
@@ -795,58 +793,60 @@ function validateAndShowPreview() {
   
   clearAllValidation();
   
+  // Collect all validation errors
+  const validationErrors = [];
+  
   if (poNumber === "") { 
-    showValidationError("po-number", "Purchase Order number is required.");
-    return; 
+    validationErrors.push({id: "po-number", message: "Purchase Order number is required."});
   }
   if (inspectedBy === "") { 
-    showValidationError("inspected-by", "Inspector ID/Name is required."); 
-    return; 
+    validationErrors.push({id: "inspected-by", message: "Inspector ID/Name is required."});
   }
   if (defectDesc === "") { 
-    showValidationError("defect-desc", "Defect description is required."); 
-    return; 
+    validationErrors.push({id: "defect-desc", message: "Defect description is required."});
   }
   if (notChosen(supplierVal)) { 
-    showValidationError("supplier-id", "Please choose a supplier."); 
-    return; 
+    validationErrors.push({id: "supplier-id", message: "Please choose a supplier."});
   }
   if (notChosen(productVal)) { 
-    showValidationError("product-id", "Please choose a product."); 
-    return; 
+    validationErrors.push({id: "product-id", message: "Please choose a product."});
   }
   if (notChosen(issueCatVal)) { 
-    showValidationError("issue-cat-id", "Please choose an issue category."); 
-    return; 
+    validationErrors.push({id: "issue-cat-id", message: "Please choose an issue category."});
   }
   if (notChosen(processType)) {
-    showValidationError("process-type-id", "Please choose a process type."); 
-    return;
+    validationErrors.push({id: "process-type-id", message: "Please choose a process type."});
   }
   
   const recvQty   = Number(recvQtyStr);
   const defectQty = Number(defectQtyStr);
   if (!Number.isFinite(recvQty) || recvQty <= 0) { 
-    showValidationError("recv-qty", "Enter a valid received quantity (number > 0)."); 
-    return; 
+    validationErrors.push({id: "recv-qty", message: "Enter a valid received quantity (number > 0)."});
   }
   if (!Number.isFinite(defectQty) || defectQty < 0) { 
-    showValidationError("defect-qty", "Enter a valid defective quantity (number ≥ 0)."); 
-    return; 
+    validationErrors.push({id: "defect-qty", message: "Enter a valid defective quantity (number ≥ 0)."});
   }
-  if (defectQty > recvQty) { 
-    showValidationError("defect-qty", "Defective quantity cannot be greater than received quantity."); 
-    return; 
+  else if (defectQty > recvQty) { 
+    validationErrors.push({id: "defect-qty", message: "Defective quantity cannot be greater than received quantity."});
   }
   if (!inspectedOn) { 
-    showValidationError("inspected-on", "Please select the inspection date."); 
-    return; 
+    validationErrors.push({id: "inspected-on", message: "Please select the inspection date."});
   }
-  const picked = new Date(inspectedOn);
-  const today  = new Date(); today.setHours(0,0,0,0);
-  if (picked > today) { 
-    showValidationError("inspected-on", "Inspection date cannot be in the future."); 
-    return; 
+  else {
+    const picked = new Date(inspectedOn);
+    const today  = new Date(); today.setHours(0,0,0,0);
+    if (picked > today) { 
+      validationErrors.push({id: "inspected-on", message: "Inspection date cannot be in the future."});
+    }
+  }
+  
+  // If there are any validation errors, show them all and return
+  if (validationErrors.length > 0) {
+    validationErrors.forEach((error, index) => {
+      showValidationError(error.id, error.message, index === 0);
+    });
+    alert("Please make sure all required fields are completed.");
+    return;
   }
   
   const formData = {
