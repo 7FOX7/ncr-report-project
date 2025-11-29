@@ -747,6 +747,15 @@ fieldset {
   pointer-events: none;
 }
 
+/* Accordion header with validation errors - only when closed */
+.collapsible-fieldset.has-errors .fieldset-toggle:not(:checked) + .fieldset-toggle-label {
+  background: #ffe6e6;
+}
+
+.collapsible-fieldset.has-errors .fieldset-toggle:not(:checked) + .fieldset-toggle-label legend {
+  color: #dc3545;
+}
+
 .fieldset-toggle-icon {
   transition: transform 0.2s ease;
   font-size: 0.9em;

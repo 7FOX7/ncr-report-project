@@ -45,6 +45,15 @@ function clearValidation(elementId) {
         errorMessage.remove();
       }
     }
+    
+    // Check if accordion still has errors, if not remove has-errors class
+    const fieldset = element.closest('.collapsible-fieldset');
+    if (fieldset) {
+      const hasRemainingErrors = fieldset.querySelectorAll('.form-group.invalid').length > 0;
+      if (!hasRemainingErrors) {
+        fieldset.classList.remove('has-errors');
+      }
+    }
   }
 }
 
@@ -58,6 +67,8 @@ function showValidationError(elementId, message, shouldFocus = false) {
       if (toggleInput) {
         toggleInput.checked = true;
       }
+      // Add error class to highlight the accordion header
+      fieldset.classList.add('has-errors');
     }
     
     const formGroup = element.closest('.form-group');
@@ -102,6 +113,12 @@ function clearAllValidation() {
     if (errorMessage) {
       errorMessage.remove();
     }
+  });
+  
+  // Remove has-errors class from all accordions
+  const fieldsets = document.querySelectorAll('.collapsible-fieldset.has-errors');
+  fieldsets.forEach(fieldset => {
+    fieldset.classList.remove('has-errors');
   });
 }
 
