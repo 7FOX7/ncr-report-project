@@ -583,7 +583,7 @@ document.addEventListener("DOMContentLoaded", () => {
         dateCreated: createdOnVal,
         lastModified,
         supplier: supplierText || supplierChoice,
-        status: isCompleted ? "Completed" : "Open"
+        status: "Open"
       };
       const staged = loadJSON("ncrNewRecords", []);
       if (!staged.some(r => r.ncrNumber === newRow.ncrNumber)) {
@@ -610,7 +610,8 @@ document.addEventListener("DOMContentLoaded", () => {
         inspectedBy:   inspectorID,
         inspectedOn:   dateInspectedVal,
         status:        statusVal,
-        isCompleted:   isCompleted,
+        qualityCompleted: isCompleted,
+        isCompleted:   false,
         itemNonconforming: itemNonconforming,
         processApplicable: processApplicable
       };
