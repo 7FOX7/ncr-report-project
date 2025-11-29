@@ -456,6 +456,11 @@ a:focus {
   user-select: none;
 }
 
+/* Prevent asterisks on checkbox labels even in required groups */
+.form-group.required .checkbox-label::after {
+  content: none;
+}
+
 .checkbox-label input[type="checkbox"] {
   margin-right: 0.75rem;
   transform: scale(1.2);

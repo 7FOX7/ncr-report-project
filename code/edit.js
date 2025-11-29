@@ -987,6 +987,46 @@ function validateAndShowPreview() {
     }
   }
   
+  // Add engineering validation if in engineering stage
+  if (currentStage === "engineering") {
+    // Check if at least one disposition is selected
+    const hasDisposition = engineering.useAsIs || engineering.repair || 
+                          engineering.rework || engineering.scrap || engineering.custNotifNCR;
+    if (!hasDisposition) {
+      validationErrors.push({id: "eng-useAsIs", message: "Please select at least one engineering disposition."});
+    }
+    
+    // Check if disposition notes are provided
+    if (!engineering.disposition || engineering.disposition.trim() === "") {
+      validationErrors.push({id: "eng-disposition", message: "Disposition notes are required."});
+    }
+    
+    // Check if engineer name is provided
+    if (!engineering.nameOfEng || engineering.nameOfEng.trim() === "") {
+      validationErrors.push({id: "eng-nameOfEng", message: "Engineer name is required."});
+    }
+    
+    // Check if Original Rev # is provided
+    if (!engineering.origRevNum || engineering.origRevNum === 0) {
+      validationErrors.push({id: "eng-origRevNum", message: "Original Rev # is required."});
+    }
+    
+    // Check if Updated Rev Date/Time is provided
+    if (!engineering.UpdatedRev || engineering.UpdatedRev.trim() === "") {
+      validationErrors.push({id: "eng-UpdatedRev", message: "Updated Rev Date/Time is required."});
+    }
+    
+    // Check if Revision Date is provided
+    if (!engineering.RevisionDate || engineering.RevisionDate.trim() === "") {
+      validationErrors.push({id: "eng-RevisionDate", message: "Revision Date is required."});
+    }
+    
+    // Check if Submitted Date is provided
+    if (!engineering.submittedDate || engineering.submittedDate.trim() === "") {
+      validationErrors.push({id: "eng-submittedDate", message: "Submitted Date is required."});
+    }
+  }
+  
   // If there are any validation errors, show them all and return
   if (validationErrors.length > 0) {
     validationErrors.forEach((error, index) => {

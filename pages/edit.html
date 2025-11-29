@@ -270,14 +270,14 @@
     <div class="form-columns">
       <div class="form-column">
         <!-- Disposition choices -->
-        <div class="form-group">
+        <div class="form-group required" id="eng-disposition-group">
           <div class="form-group-with-tooltip">
             <label>Engineering Disposition</label>
             <span class="tooltip" data-tooltip="Choose all applicable dispositions." tabindex="0"></span>
           </div>
           <div class="checkbox-group" role="group">
             <label class="checkbox-label">
-              <input type="checkbox" id="eng-useAsIs"    name="eng-dispo" value="useAsIs"><span class="checkbox-text">Use as-is</span>
+              <input type="checkbox" id="eng-useAsIs" name="eng-dispo" value="useAsIs"><span class="checkbox-text">Use as-is</span>
             </label>
             <label class="checkbox-label">
               <input type="checkbox" id="eng-repair"     name="eng-dispo" value="repair"><span class="checkbox-text">Repair</span>
@@ -295,7 +295,7 @@
         </div>
 
         <!-- Free text disposition note -->
-        <div class="form-group">
+        <div class="form-group required">
           <div class="form-group-with-tooltip">
             <label for="eng-disposition">Disposition Notes</label>
             <span class="tooltip" data-tooltip="Brief explanation or additional instructions from Engineering." tabindex="0"></span>
@@ -304,7 +304,7 @@
         </div>
 
         <!-- Engineering owner -->
-        <div class="form-group">
+        <div class="form-group required">
           <div class="form-group-with-tooltip">
             <label for="eng-nameOfEng">Engineer Name</label>
             <span class="tooltip" data-tooltip="Full name of the responsible engineer." tabindex="0"></span>
@@ -330,13 +330,13 @@
 
           <div class="form-columns">
             <div class="form-column">
-              <div class="form-group">
+              <div class="form-group required">
                 <label for="eng-origRevNum">Original Rev #</label>
                 <input type="number" id="eng-origRevNum" name="eng-origRevNum" min="0" placeholder="e.g., 3">
               </div>
             </div>
             <div class="form-column">
-              <div class="form-group">
+              <div class="form-group required">
                 <label for="eng-UpdatedRev">Updated Rev Date/Time</label>
                 <input type="datetime-local" id="eng-UpdatedRev" name="eng-UpdatedRev">
               </div>
@@ -345,13 +345,13 @@
 
           <div class="form-columns">
             <div class="form-column">
-              <div class="form-group">
+              <div class="form-group required">
                 <label for="eng-RevisionDate">Revision Date</label>
                 <input type="date" id="eng-RevisionDate" name="eng-RevisionDate">
               </div>
             </div>
             <div class="form-column">
-              <div class="form-group">
+              <div class="form-group required">
                 <label for="eng-submittedDate">Submitted Date</label>
                 <input type="date" id="eng-submittedDate" name="eng-submittedDate">
               </div>
