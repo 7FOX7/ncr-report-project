@@ -383,6 +383,9 @@ function enableEngineeringOnly() {
   const form = document.getElementById("ncr-edit-form") || document.querySelector("form");
   if (!engSection || !form) return;
 
+  // Merge quality inspector accordions into one
+  mergeQualityInspectorAccordions();
+
   const wrapper = engSection.closest(".collapsible-fieldset") || engSection;
   wrapper.style.display = "";
   wrapper.removeAttribute("aria-hidden");
@@ -415,6 +418,70 @@ function enableEngineeringOnly() {
       }
     }
   });
+}
+
+function mergeQualityInspectorAccordions() {
+  // Get all three quality inspector accordions
+  const headerToggle = document.getElementById("header-toggle");
+  const lineitemToggle = document.getElementById("lineitem-toggle");
+  const attachmentToggle = document.getElementById("attachment-toggle");
+  
+  if (!headerToggle || !lineitemToggle || !attachmentToggle) return;
+  
+  const headerFieldset = headerToggle.closest(".collapsible-fieldset");
+  const lineitemFieldset = lineitemToggle.closest(".collapsible-fieldset");
+  const attachmentFieldset = attachmentToggle.closest(".collapsible-fieldset");
+  
+  if (!headerFieldset || !lineitemFieldset || !attachmentFieldset) return;
+  
+  // Check if already merged (avoid re-merging)
+  if (headerFieldset.classList.contains("merged-quality-accordion")) return;
+  
+  // Change the header legend to indicate it's from Quality Inspector
+  const headerLabel = headerFieldset.querySelector(".fieldset-toggle-label legend");
+  if (headerLabel) {
+    headerLabel.textContent = "Quality Inspector Information (Read-Only)";
+  }
+  
+  // Get the content divs
+  const headerContent = headerFieldset.querySelector(".fieldset-content");
+  const lineitemContent = lineitemFieldset.querySelector(".fieldset-content");
+  const attachmentContent = attachmentFieldset.querySelector(".fieldset-content");
+  
+  if (!headerContent || !lineitemContent || !attachmentContent) return;
+  
+  // Create section dividers with titles
+  const lineitemDivider = document.createElement("div");
+  lineitemDivider.className = "merged-section-divider";
+  lineitemDivider.innerHTML = '<h4 class="merged-section-title">Line Item Details</h4>';
+  
+  const attachmentDivider = document.createElement("div");
+  attachmentDivider.className = "merged-section-divider";
+  attachmentDivider.innerHTML = '<h4 class="merged-section-title">Attachments</h4>';
+  
+  // Append line item content to header accordion
+  headerContent.appendChild(lineitemDivider);
+  const lineitemContentClone = lineitemContent.cloneNode(true);
+  lineitemContentClone.querySelectorAll(".form-columns").forEach(cols => {
+    headerContent.appendChild(cols);
+  });
+  
+  // Append attachment content to header accordion
+  headerContent.appendChild(attachmentDivider);
+  const attachmentContentClone = attachmentContent.cloneNode(true);
+  attachmentContentClone.querySelectorAll(".form-columns").forEach(cols => {
+    headerContent.appendChild(cols);
+  });
+  
+  // Hide the line item and attachment accordions
+  lineitemFieldset.style.display = "none";
+  attachmentFieldset.style.display = "none";
+  
+  // Mark as merged to avoid re-processing
+  headerFieldset.classList.add("merged-quality-accordion");
+  
+  // Open the merged accordion by default
+  headerToggle.checked = true;
 }
 
 // ---------------- Validation helpers ----------------

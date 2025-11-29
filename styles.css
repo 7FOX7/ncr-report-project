@@ -779,6 +779,34 @@ fieldset {
   padding: 20px;
 }
 
+/* Merged section styling for engineering view */
+.merged-section-divider {
+  margin: 2rem 0 1rem 0;
+  padding-top: 1.5rem;
+  border-top: 2px solid #dee2e6;
+}
+
+.merged-section-divider:first-of-type {
+  margin-top: 1.5rem;
+}
+
+.merged-section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #495057;
+  margin: 0 0 1rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.merged-quality-accordion .fieldset-content {
+  max-height: none !important;
+}
+
+.fieldset-toggle:checked + .fieldset-toggle-label + .merged-quality-accordion .fieldset-content {
+  max-height: none;
+}
+
 /* Ensure only one fieldset can be open at a time */
 .fieldset-toggle:checked + .fieldset-toggle-label {
   background: rgb(0, 0, 0); 
