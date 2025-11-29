@@ -512,28 +512,18 @@ function mergeQualityInspectorAccordions() {
         e.preventDefault();
         e.stopPropagation();
         
-        // Toggle quality inspector
-        const shouldOpen = !headerToggle.checked;
-        headerToggle.checked = shouldOpen;
-        
-        // If opening quality, close engineering
-        if (shouldOpen) {
-          engineeringToggle.checked = false;
-        }
+        // Ensure quality is open, engineering is closed
+        headerToggle.checked = true;
+        engineeringToggle.checked = false;
       });
       
       engineeringLabel.addEventListener("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
         
-        // Toggle engineering
-        const shouldOpen = !engineeringToggle.checked;
-        engineeringToggle.checked = shouldOpen;
-        
-        // If opening engineering, close quality
-        if (shouldOpen) {
-          headerToggle.checked = false;
-        }
+        // Ensure engineering is open, quality is closed
+        engineeringToggle.checked = true;
+        headerToggle.checked = false;
       });
       
       // Prevent the radio buttons themselves from being clicked
