@@ -480,8 +480,71 @@ function mergeQualityInspectorAccordions() {
   // Mark as merged to avoid re-processing
   headerFieldset.classList.add("merged-quality-accordion");
   
-  // Open the merged accordion by default
-  headerToggle.checked = true;
+  // Remove required field indicators from the merged quality inspector accordion
+  headerFieldset.querySelectorAll(".form-group.required").forEach(formGroup => {
+    formGroup.classList.remove("required");
+  });
+  
+  // Remove required attributes
+  headerFieldset.querySelectorAll("[required]").forEach(el => {
+    el.removeAttribute("required");
+    el.removeAttribute("aria-required");
+  });
+  
+  // Disable file input in the merged accordion (attachment section)
+  const fileInput = headerFieldset.querySelector("#attachment-file");
+  if (fileInput) {
+    fileInput.disabled = true;
+  }
+  
+  // Ensure only one accordion can be open at a time
+  const engineeringToggle = document.getElementById("engineering-toggle");
+  const engineeringFieldset = engineeringToggle ? engineeringToggle.closest(".collapsible-fieldset") : null;
+  
+  if (engineeringToggle && engineeringFieldset) {
+    // Get the labels for clicking
+    const qualityLabel = headerFieldset.querySelector(".fieldset-toggle-label");
+    const engineeringLabel = engineeringFieldset.querySelector(".fieldset-toggle-label");
+    
+    if (qualityLabel && engineeringLabel) {
+      // Prevent default label behavior and handle manually
+      qualityLabel.addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Toggle quality inspector
+        const shouldOpen = !headerToggle.checked;
+        headerToggle.checked = shouldOpen;
+        
+        // If opening quality, close engineering
+        if (shouldOpen) {
+          engineeringToggle.checked = false;
+        }
+      });
+      
+      engineeringLabel.addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Toggle engineering
+        const shouldOpen = !engineeringToggle.checked;
+        engineeringToggle.checked = shouldOpen;
+        
+        // If opening engineering, close quality
+        if (shouldOpen) {
+          headerToggle.checked = false;
+        }
+      });
+      
+      // Prevent the radio buttons themselves from being clicked
+      headerToggle.style.pointerEvents = "none";
+      engineeringToggle.style.pointerEvents = "none";
+    }
+    
+    // Open the engineering accordion by default, close quality inspector
+    headerToggle.checked = false;
+    engineeringToggle.checked = true;
+  }
 }
 
 // ---------------- Validation helpers ----------------

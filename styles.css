@@ -799,13 +799,7 @@ fieldset {
   letter-spacing: 0.5px;
 }
 
-.merged-quality-accordion .fieldset-content {
-  max-height: none !important;
-}
-
-.fieldset-toggle:checked + .fieldset-toggle-label + .merged-quality-accordion .fieldset-content {
-  max-height: none;
-}
+/* Allow merged quality accordion to collapse/expand normally */
 
 /* Ensure only one fieldset can be open at a time */
 .fieldset-toggle:checked + .fieldset-toggle-label {
