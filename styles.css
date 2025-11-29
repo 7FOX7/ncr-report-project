@@ -780,8 +780,9 @@ fieldset {
 }
 
 .fieldset-toggle:checked + .fieldset-toggle-label + .fieldset-content {
-  max-height: 1000px;
+  max-height: 1500px;
   padding: 20px;
+  padding-bottom: 60px;
 }
 
 /* Merged section styling for engineering view */
