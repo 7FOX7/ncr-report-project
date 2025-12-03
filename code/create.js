@@ -634,4 +634,48 @@ document.addEventListener("DOMContentLoaded", () => {
       if (createdOn) createdOn.value = todayISO();
     });
   }
+
+  // Demo auto-fill button for Quality Inspector section
+  const demoAutofillBtn = document.getElementById("demo-autofill-btn");
+  if (demoAutofillBtn) {
+    demoAutofillBtn.addEventListener("click", () => {
+      // Fill NCR Header Information
+      document.getElementById("po-number").value = "PO-2025-1234";
+      document.getElementById("so-number").value = "SO-2025-5678";
+      
+      // Fill Supplier/Process section - use correct IDs
+      const supplierSelect = document.getElementById("supplier-id");
+      if (supplierSelect) supplierSelect.value = "1";
+      
+      const processTypeSelect = document.getElementById("process-type-id");
+      if (processTypeSelect) processTypeSelect.value = "1";
+      
+      // Check process applicable checkboxes
+      const supplierRecInsp = document.getElementById("supplier-rec-insp");
+      if (supplierRecInsp) supplierRecInsp.checked = true;
+      
+      // Fill Product Information - use correct IDs
+      const productSelect = document.getElementById("product-id");
+      if (productSelect) productSelect.value = "1";
+      
+      document.getElementById("recv-qty").value = "100";
+      document.getElementById("defect-qty").value = "5";
+      
+      // Fill Issue Details - use correct IDs
+      const issueCategorySelect = document.getElementById("issue-cat-id");
+      if (issueCategorySelect) issueCategorySelect.value = "1";
+      
+      document.getElementById("defect-desc").value = "Sample defect description for demo purposes. The items received showed signs of damage during inspection.";
+      
+      // Fill Item Marked Nonconforming
+      const nonconformingYes = document.getElementById("item-nonconforming-yes");
+      if (nonconformingYes) nonconformingYes.checked = true;
+      
+      // Fill Inspector Information - use correct IDs
+      document.getElementById("inspected-by").value = "Inspector-001";
+      document.getElementById("inspected-on").value = todayISO();
+      
+      alert("Quality Inspector section auto-filled with demo data!");
+    });
+  }
 });

@@ -24,6 +24,7 @@
           <ul>
             <li><a href="index.html" aria-current="page">Home</a></li>
             <li><a href="about.html">About</a></li>
+            <li><a href="login.html" id="login-nav-link">Login</a></li>
           </ul>
         </nav>
       </div>
@@ -109,7 +110,7 @@
         <div class="ncr-list-header">
           <h2 id="ncr-list-heading">NCR Records</h2>
           <div class="ncr-list-actions">
-            <a href="create.html" class="btn btn-primary" role="button">Create New NCR</a>
+            <a href="create.html" class="btn btn-primary" role="button" id="create-ncr-btn">Create New NCR</a>
           </div>
         </div>
 
@@ -233,5 +234,18 @@
     <!-- PAGE SCRIPTS -->
     <script src="../code/ncr-data.js"></script>
     <script src="../code/pagination.js"></script>
+    <script src="../code/credentials.js"></script>
+    <script>
+      // Control Create NCR button visibility based on user role
+      document.addEventListener('DOMContentLoaded', function() {
+        const createBtn = document.getElementById('create-ncr-btn');
+        if (createBtn) {
+          const credentials = getUserCredentials();
+          if (!credentials || credentials.type !== 'Quality Inspector') {
+            createBtn.style.display = 'none';
+          }
+        }
+      });
+    </script>
   </body>
 </html>

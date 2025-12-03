@@ -586,6 +586,31 @@ a:focus {
   background: #f8f9fa;
 }
 
+/* Login page styles */
+.login-content {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 2rem;
+  min-height: 300px;
+  flex-wrap: wrap;
+}
+
+.login-content .about-message {
+  max-width: none;
+  width: auto;
+  min-width: 500px;
+}
+
+.demo-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 300px;
+  max-width: 350px;
+  order: -1;
+}
+
 /* About page styles */
 .about-content {
   display: flex;

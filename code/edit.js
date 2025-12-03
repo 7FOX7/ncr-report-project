@@ -681,6 +681,7 @@ const params = new URLSearchParams(window.location.search);
 const ncrNumberParam = params.get("ncr") || "";
 const urlCreated     = params.get("dateCreated") || "";
 const urlSupplier    = params.get("supplier") || "";
+const isReadOnly     = params.get("readonly") === "true";
 
 const form           = document.getElementById("ncr-edit-form") || document.querySelector("form");
 const inpNcr         = document.getElementById("ncr-number");
@@ -838,7 +839,129 @@ document.addEventListener("DOMContentLoaded", () => {
       onResetClick(e);
     });
   }
+
+  // Demo auto-fill button for active section
+  const demoAutofillBtn = document.getElementById("demo-autofill-btn");
+  if (demoAutofillBtn) {
+    demoAutofillBtn.addEventListener("click", () => {
+      if (currentStage === "quality") {
+        // Auto-fill Quality Inspector section - use correct IDs
+        document.getElementById("po-number").value = "PO-2025-9876";
+        document.getElementById("so-number").value = "SO-2025-4321";
+        
+        const supplierSelect = document.getElementById("supplier-id");
+        if (supplierSelect) supplierSelect.value = "2";
+        
+        const processTypeSelect = document.getElementById("process-type-id");
+        if (processTypeSelect) processTypeSelect.value = "2";
+        
+        const wipProduction = document.getElementById("wip-production");
+        if (wipProduction) wipProduction.checked = true;
+        
+        const productSelect = document.getElementById("product-id");
+        if (productSelect) productSelect.value = "2";
+        
+        document.getElementById("recv-qty").value = "250";
+        document.getElementById("defect-qty").value = "12";
+        
+        const issueCategorySelect = document.getElementById("issue-cat-id");
+        if (issueCategorySelect) issueCategorySelect.value = "2";
+        
+        document.getElementById("defect-desc").value = "Demo auto-filled: Packaging issues found during quality inspection. Multiple units had damaged outer boxes.";
+        
+        const nonconformingNo = document.getElementById("item-nonconforming-no");
+        if (nonconformingNo) nonconformingNo.checked = true;
+        
+        document.getElementById("inspected-by").value = "QI-Demo-123";
+        document.getElementById("inspected-on").value = todayISO();
+        
+        alert("Quality Inspector section auto-filled with demo data!");
+        
+      } else if (currentStage === "engineering") {
+        // Auto-fill Engineering section - use correct IDs
+        const useAsIsCheckbox = document.getElementById("eng-useAsIs");
+        if (useAsIsCheckbox) useAsIsCheckbox.checked = true;
+        
+        const repairCheckbox = document.getElementById("eng-repair");
+        if (repairCheckbox) repairCheckbox.checked = true;
+        
+        const custNotifCheckbox = document.getElementById("eng-custNotif");
+        if (custNotifCheckbox) custNotifCheckbox.checked = true;
+        
+        document.getElementById("eng-disposition").value = "Demo auto-filled: Items can be used as-is after minor repairs. Customer notification sent. No drawing updates required.";
+        
+        document.getElementById("eng-nameOfEng").value = "Engineer-Demo-456";
+        
+        // Fill drawing update fields
+        document.getElementById("eng-origRevNum").value = "1";
+        document.getElementById("eng-RevisionDate").value = todayISO();
+        document.getElementById("eng-submittedDate").value = todayISO();
+        
+        // Set updated rev date/time to current date/time
+        const now = new Date();
+        const datetimeLocal = now.getFullYear() + '-' + 
+                              String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                              String(now.getDate()).padStart(2, '0') + 'T' + 
+                              String(now.getHours()).padStart(2, '0') + ':' + 
+                              String(now.getMinutes()).padStart(2, '0');
+        document.getElementById("eng-UpdatedRev").value = datetimeLocal;
+        
+        alert("Engineering section auto-filled with demo data!");
+      }
+    });
+  }
+
+  // Apply read-only mode if readonly parameter is present
+  if (isReadOnly) {
+    applyReadOnlyMode();
+  }
 });
+
+// Function to make all inputs read-only
+function applyReadOnlyMode() {
+  // Update page title
+  const pageTitle = document.querySelector('h1');
+  if (pageTitle) {
+    pageTitle.textContent = 'View Non-Conformance Report (Read-Only)';
+  }
+
+  // Disable all form inputs BUT NOT accordion toggles
+  const allInputs = form.querySelectorAll('input, select, textarea');
+  allInputs.forEach(input => {
+    // Skip accordion/fieldset toggle inputs to keep them functional
+    if (input.classList.contains('fieldset-toggle') || input.name === 'fieldset-toggle') {
+      return; // Don't disable accordion toggles
+    }
+    
+    if (input.type === 'checkbox' || input.type === 'radio') {
+      input.disabled = true;
+    } else {
+      input.readOnly = true;
+      input.disabled = true;
+    }
+  });
+
+  // Hide all action buttons
+  const btnComplete = document.getElementById("btnComplete");
+  const btnResetChanges = document.getElementById("btnResetChanges") || document.getElementById("btnReset");
+  const demoAutofillBtn = document.getElementById("demo-autofill-btn");
+  
+  if (btnComplete) btnComplete.style.display = 'none';
+  if (btnResetChanges) btnResetChanges.style.display = 'none';
+  if (demoAutofillBtn) demoAutofillBtn.style.display = 'none';
+
+  // Add a "Back to Home" button instead
+  const buttonContainer = document.querySelector('.ncr-form');
+  if (buttonContainer) {
+    const backButton = document.createElement('a');
+    backButton.href = 'index.html';
+    backButton.className = 'btn btn-secondary';
+    backButton.textContent = 'Back to Home';
+    backButton.style.marginTop = '2rem';
+    buttonContainer.appendChild(backButton);
+  }
+}
+
 
 // restore last saved state from storage 
 function onResetClick(e) {

@@ -21,6 +21,7 @@
           <ul>
             <li><a href="index.html">Home</a></li>
             <li><a href="about.html">About</a></li>
+            <li><a href="login.html" id="login-nav-link">Login</a></li>
           </ul>
         </nav>
       </div>
@@ -34,7 +35,10 @@
     </nav>
 
     <main role="main">
-      <h1>Create New Non-Conformance Report</h1>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h1>Create New Non-Conformance Report</h1>
+        <button type="button" class="btn btn-primary" id="demo-autofill-btn" style="margin-left: auto;">[DEMO] Auto-fill Active Section</button>
+      </div>
       
       <form id="ncr-form" class="ncr-form" novalidate>
         <!-- NCR MAIN -->
@@ -289,6 +293,7 @@
       </div>
     </div>
     
+    <script src="../code/credentials.js"></script>
     <script src="../code/create.js"></script>
   </body>
 </html><!-- TODO: change the order in which validation will be made -->

@@ -178,6 +178,43 @@ function getWorkflowInfo(details) {
 }
 
 // ------------------------
+// Get user credentials from localStorage
+// ------------------------
+function getUserCredentials() {
+  try {
+    const data = localStorage.getItem('userCredentials');
+    return data ? JSON.parse(data) : null;
+  } catch {
+    return null;
+  }
+}
+
+// ------------------------
+// Check if user can edit based on workflow stage
+// ------------------------
+function canUserEdit(workflowStage) {
+  const credentials = getUserCredentials();
+  if (!credentials || !credentials.type || credentials.type === 'loggedOut') {
+    return false;
+  }
+
+  const userType = credentials.type;
+
+  // Map workflow stages to user roles
+  if (workflowStage === 'quality' && userType === 'Quality Inspector') {
+    return true;
+  }
+  if (workflowStage === 'engineering' && userType === 'Engineer') {
+    return true;
+  }
+  if (workflowStage === 'quality' && userType === 'Purchasing Inspector') {
+    return true;
+  }
+  
+  return false;
+}
+
+// ------------------------
 // Render the table
 // ------------------------
 function renderNCRTable(page = 1) {
@@ -217,25 +254,45 @@ function renderNCRTable(page = 1) {
       (ncr.archived === true) ||
       ncrArchivedData.some(a => a.id === ncr.id);
 
-    if (!isCompleted && !isArchived) {
-      actionsHtml = `
-        <button type="button" class="btn btn-secondary"
-          aria-label="Edit ${ncr.ncrNumber}"
-          onclick="openEdit('${ncr.ncrNumber}', '${dateCreated}', '${(supplier || "").toString().replace(/'/g, "\\'")}')">
-          Edit
-        </button>
-      `;
+    // Check if current user can edit this NCR based on workflow stage
+    const userCanEdit = canUserEdit(workflowInfo.stage);
+    const userCredentials = getUserCredentials();
+    const isUserLoggedIn = userCredentials && userCredentials.type && userCredentials.type !== 'loggedOut';
 
-      actionsHtml += `
-        <button type="button" class="btn btn-outline"
-          aria-label="Archive ${ncr.ncrNumber}"
-          onclick="showArchiveConfirmation(${ncr.id}, '${ncr.ncrNumber}')">
-          Archive
-        </button>
-      `;
+    if (!isCompleted && !isArchived) {
+      // Only show Edit button if user has permission for this workflow stage
+      if (userCanEdit) {
+        actionsHtml = `
+          <button type="button" class="btn btn-secondary"
+            aria-label="Edit ${ncr.ncrNumber}"
+            onclick="openEdit('${ncr.ncrNumber}', '${dateCreated}', '${(supplier || "").toString().replace(/'/g, "\\'")}')">
+            Edit
+          </button>
+        `;
+      } else {
+        // Show View button for users who can't edit this stage - opens edit page in read-only mode
+        actionsHtml = `
+          <button type="button" class="btn btn-outline"
+            aria-label="View ${ncr.ncrNumber}"
+            onclick="openView('${ncr.ncrNumber}', '${dateCreated}', '${(supplier || "").toString().replace(/'/g, "\\'")}')">
+            View
+          </button>
+        `;
+      }
+
+      // Only show Archive button if user is logged in
+      if (isUserLoggedIn) {
+        actionsHtml += `
+          <button type="button" class="btn btn-outline"
+            aria-label="Archive ${ncr.ncrNumber}"
+            onclick="showArchiveConfirmation(${ncr.id}, '${ncr.ncrNumber}')">
+            Archive
+          </button>
+        `;
+      }
     }
 
-    if (isArchived) {
+    if (isArchived && isUserLoggedIn) {
       actionsHtml += `
         <button type="button" class="btn btn-secondary"
           aria-label="Un-archive ${ncr.ncrNumber}"
@@ -818,5 +875,13 @@ document.addEventListener("DOMContentLoaded", function () {
 // ------------------------
 function openEdit(ncrNumber, dateCreated, supplier) {
   const params = new URLSearchParams({ ncr: ncrNumber, dateCreated, supplier });
+  window.location.href = `edit.html?${params.toString()}`;
+}
+
+// ------------------------
+// View navigation helper (read-only mode)
+// ------------------------
+function openView(ncrNumber, dateCreated, supplier) {
+  const params = new URLSearchParams({ ncr: ncrNumber, dateCreated, supplier, readonly: 'true' });
   window.location.href = `edit.html?${params.toString()}`;
 }

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - NCR Management System</title>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    
+    <header role="banner">
+      <div class="header-container">
+        <img src="../assets/Crossfire Logo - no bkgd.png"
+             alt="NCR Management System Logo"
+             class="logo"
+             draggable="false">
+
+        <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation menu">
+        <label for="nav-toggle" class="nav-toggle-label">
+          <span class="hamburger"></span>
+        </label>
+
+        <nav role="navigation" aria-label="Main navigation" class="nav">
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="login.html" aria-current="page" id="login-nav-link">Login</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <nav aria-label="Breadcrumb" class="breadcrumb">
+        <ol>
+            <li><a href="index.html">Home</a></li>
+            <li><span aria-current="page">Login</span></li>
+        </ol>
+    </nav>
+
+    <main>
+        <h1 id="login-heading">Login</h1>
+        <button class="btn btn-primary">[DEMO] Login as Quality Inspector</button>
+        <button class="btn btn-primary">[DEMO] Login as Engineer</button>
+        <button class="btn btn-primary">[DEMO] Login as Purchasing Inspector</button>
+
+        <section class="login-content" aria-labelledby="login-heading">
+          <div class="about-message">
+            <form id="login-form" aria-describedby="login-description">
+              <div id="login-description" class="sr-only">
+                Please enter your username and password to log in.
+              </div>
+
+              <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required aria-required="true">
+              </div>
+
+              <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="text" id="password" name="password" required aria-required="true">
+              </div>
+
+              <div class="form-group">
+                <button class="btn btn-primary" type="submit">Login</button>
+              </div>
+              
+              <div id="login-error" class="error-message" role="alert" aria-live="assertive"></div>
+            </form>
+          </div>
+        </section>
+
+    </main>
+
+    <footer role="contentinfo" class="footer">
+      <div>
+        <p>&copy; 2025 NCR Management System. All rights reserved.</p>
+      </div>
+    </footer>
+
+    <script src="../code/ncr-data.js"></script>
+    <script src="../code/pagination.js"></script>
+    <script src="../code/credentials.js"></script>
+  </body>
+</html>
