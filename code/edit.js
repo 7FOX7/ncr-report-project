@@ -900,7 +900,6 @@ function applyRoleVisibility(details) {
     const canSeeFinal = isPurchasingStepCompleted(details);
 
     if (currentStage === "quality-final") {
-      // *** FIXED LOGIC ***
       // Close-out stage: Quality should see ONLY their own sections:
       // - Quality Inspector (merged) as read-only
       // - Final Re-Inspection & Closure as editable
@@ -918,8 +917,7 @@ function applyRoleVisibility(details) {
       // Make the first Quality section read-only
       setFieldsetReadOnly(headerFieldset, true);
     } else {
-      // Initial Quality stage: only the Quality accordion is editable,
-      // Engineering & Purchasing handled by their own roles.
+      // Initial Quality stage: only the Quality accordion is editable
       setFieldsetVisible(headerFieldset, true);
       setFieldsetVisible(lineFieldset, false);
       setFieldsetVisible(attachmentFieldset, false);
@@ -1785,8 +1783,14 @@ function validateAndShowPreview() {
       });
     }
   } else if (currentStage === "quality-final" && isQualityRole()) {
+    // FINAL STAGE STRICT VALIDATION
+    if (!finalInspection.reinspectedAcceptable) {
+      validationErrors.push({
+        id: "reinspect-acceptable",
+        message: "Please indicate if the product is acceptable after re-inspection.",
+      });
+    }
     if (
-      finalInspection.reinspectedAcceptable &&
       finalInspection.reinspectedAcceptable === "no" &&
       !finalInspection.newNcrNumber
     ) {
@@ -1795,19 +1799,25 @@ function validateAndShowPreview() {
         message: "A new NCR # must be generated if re-inspection is not acceptable.",
       });
     }
-    if (finalInspection.reinspectedAcceptable && !finalInspection.inspectorName) {
+    if (!finalInspection.inspectorName) {
       validationErrors.push({
         id: "reinspect-inspector-name",
         message: "Re-Inspecting inspector name is required.",
       });
     }
-    if (finalInspection.reinspectedAcceptable && !finalInspection.inspectorDate) {
+    if (!finalInspection.inspectorDate) {
       validationErrors.push({
         id: "reinspect-date",
         message: "Re-Inspection date is required.",
       });
     }
-    if (finalInspection.ncrClosed && finalInspection.ncrClosed === "yes") {
+    if (!finalInspection.ncrClosed) {
+      validationErrors.push({
+        id: "close-ncr",
+        message: "Please indicate if the NCR is being closed.",
+      });
+    }
+    if (finalInspection.ncrClosed === "yes") {
       if (!finalInspection.qualityDeptName) {
         validationErrors.push({
           id: "close-quality-name",
