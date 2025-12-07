@@ -1,3 +1,6 @@
+// ========================
+// Seed data (fallback only)
+// ========================
 let ncrData = (window.ncrData && Array.isArray(window.ncrData)) ? window.ncrData : [
   { id: 1, ncrNumber: "2025-611", dateCreated: "2025-10-01", lastModified: "2025-10-05", supplier: "BlueHaven Distributors" },
   { id: 2, ncrNumber: "2025-325", dateCreated: "2025-10-02", lastModified: "2025-10-06", supplier: "Apex Global Trading" },
@@ -11,9 +14,9 @@ let ncrArchivedData = (window.ncrArchivedData && Array.isArray(window.ncrArchive
 
 let ncrFilteredData = ncrData.slice();
 
-// ------------------------
+// ========================
 // LocalStorage helpers
-// ------------------------
+// ========================
 function loadJSON(key, fallback) {
   try {
     return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
@@ -22,57 +25,49 @@ function loadJSON(key, fallback) {
   }
 }
 
-// ------------------------
-// Details map
-// ------------------------
+// Details map: { [ncrNumber]: detailsObject }
 function getDetailsMap() {
-  // { [ncrNumber]: { ... } }
   return loadJSON("ncrDetails", {});
 }
 
-// ------------------------
-// Merge NEW rows from Create
-// ------------------------
+// ========================
+// New + edited rows
+// ========================
 function mergeIncomingRecords() {
   const incoming = loadJSON("ncrNewRecords", []);
   if (!Array.isArray(incoming) || incoming.length === 0) return;
 
   const detailsMap = getDetailsMap();
-
   const seen = new Set(ncrData.map(r => r.ncrNumber));
   let maxId = ncrData.reduce((m, r) => Math.max(m, Number(r.id) || 0), 0);
 
   incoming.forEach(r => {
-    if (!seen.has(r.ncrNumber)) {
-      // Ensure id
-      if (typeof r.id !== "number" || !Number.isFinite(r.id)) {
-        maxId += 1;
-        r.id = maxId;
-      }
+    if (seen.has(r.ncrNumber)) return;
 
-      // Try to fill in dates and supplier from details map if missing
-      const d = detailsMap[r.ncrNumber] || {};
-      if (!r.dateCreated) {
-        r.dateCreated = d.dateCreated || d.lastModified || r.dateCreated || "";
-      }
-      if (!r.lastModified) {
-        r.lastModified = d.lastModified || d.dateCreated || r.dateCreated || "";
-      }
-      if (!r.supplier && d.supplierName) {
-        r.supplier = d.supplierName;
-      }
-
-      ncrData.push(r);
-      seen.add(r.ncrNumber);
+    if (typeof r.id !== "number" || !Number.isFinite(r.id)) {
+      maxId += 1;
+      r.id = maxId;
     }
+
+    const d = detailsMap[r.ncrNumber] || {};
+    if (!r.dateCreated) {
+      r.dateCreated = d.dateCreated || d.lastModified || "";
+    }
+    if (!r.lastModified) {
+      r.lastModified = d.lastModified || d.dateCreated || r.dateCreated || "";
+    }
+    if (!r.supplier && d.supplierName) {
+      r.supplier = d.supplierName;
+    }
+
+    ncrData.push(r);
+    seen.add(r.ncrNumber);
   });
 
+  // optional: clear temp storage
   // localStorage.removeItem("ncrNewRecords");
 }
 
-// ------------------------
-// Apply EDITS from Edit page
-// ------------------------
 function applyEdits() {
   const edits = loadJSON("ncrEdits", []);
   if (!Array.isArray(edits) || edits.length === 0) return;
@@ -83,140 +78,134 @@ function applyEdits() {
     if (row) Object.assign(row, e);
   });
 
+  // optional: clear temp storage
   // localStorage.removeItem("ncrEdits");
 }
 
-// ------------------------
-// Optional helper: checks if inspector section is filled
-// ------------------------
-function isQualitySectionComplete(details) {
-  if (!details) return false;
-
-  const headerComplete =
-    !!details.purchaseOrder &&
-    (!!details.supplierName || !!details.supplierValue) &&
-    !!details.processTypeValue;
-
-  const inspectionComplete =
-    !!details.productValue &&
-    details.recvQty !== undefined &&
-    details.recvQty !== null &&
-    details.recvQty !== "" &&
-    !!details.issueCategoryValue &&
-    !!details.defectDescription &&
-    !!details.inspectedBy &&
-    !!details.inspectedOn;
-
-  return headerComplete && inspectionComplete;
-}
+// ========================
+// WORKFLOW LOGIC
+// ========================
 
 /**
- * Decide which workflow stage is NEXT / currently needed.
- * Uses explicit flags:
- *  - details.qualityCompleted  (inspector pressed "Mark as Completed")
- *  - details.isCompleted       (engineer pressed "Mark as Completed")
+ * Figure out which stage is NEXT / active based on flags.
+ *
+ * Expected flags on details:
+ *   details.qualityCompleted          (first quality section done)
+ *   details.engineeringCompleted      (engineering done)
+ *   details.purchasingCompleted       (purchasing/operations done)
+ *   details.finalQualityCompleted     (final quality close-out done)
+ *   details.isCompleted               (final closed flag)
  *
  * Returns:
- *   { label: "Quality Inspector", stage: "quality" }
- *   { label: "Engineering",      stage: "engineering" }
- *   { label: "Completed",        stage: "completed" }
+ *   { stage: 'quality-initial' | 'engineering' | 'purchasing' | 'quality-final' | 'completed',
+ *     label: '...' }
  */
 function getWorkflowInfo(details) {
   if (!details) {
-    // Brand new NCR – inspector starts
+    // Brand new NCR – quality starts it
     return {
-      label: "Quality Inspector",
-      stage: "quality"
+      stage: "quality-initial",
+      label: "Quality Inspector"
     };
   }
 
-  const qualityCompleted = !!details.qualityCompleted;
+  const qualityInitialDone =
+    !!details.qualityInitialCompleted || !!details.qualityCompleted; // support both names
 
-  const eng = details.engineering || {};
-  const engActionsSelected =
-    !!eng.useAsIs ||
-    !!eng.repair ||
-    !!eng.rework ||
-    !!eng.scrap ||
-    !!eng.custNotifNCR ||
-    !!eng.drawingReqUpd;
+  const engineeringDone   = !!details.engineeringCompleted;
+  const purchasingDone    = !!details.purchasingCompleted;
+  const finalQualityDone  = !!details.finalQualityCompleted;
+  const fullyCompleted    = !!details.isCompleted;
 
-  const engineeringComplete =
-    engActionsSelected &&
-    !!eng.disposition &&
-    !!eng.nameOfEng;
-
-  // 1. NCR fully completed by Engineering
-  if (details.isCompleted) {
+  // FINAL COMPLETED
+  if (fullyCompleted || (qualityInitialDone && engineeringDone && purchasingDone && finalQualityDone)) {
     return {
-      label: "Completed",
-      stage: "completed"
+      stage: "completed",
+      label: "Completed"
     };
   }
 
-  // 2. Inspector has NOT yet pressed Mark As Completed
-  if (!qualityCompleted) {
+  // 1. First quality still needs to do their part
+  if (!qualityInitialDone) {
     return {
-      label: "Quality Inspector",
-      stage: "quality"
+      stage: "quality-initial",
+      label: "Quality Inspector"
     };
   }
 
-  // 3. Inspector finished -> Engineering takes over
-  if (!engineeringComplete) {
+  // 2. Engineering is next
+  if (!engineeringDone) {
     return {
-      label: "Engineering",
-      stage: "engineering"
+      stage: "engineering",
+      label: "Engineering"
     };
   }
 
-  // 4. Engineering completed fields but hasn't pressed final Mark As Completed
+  // 3. Purchasing / Operations is next
+  if (!purchasingDone) {
+    return {
+      stage: "purchasing",
+      label: "Purchasing / Operations"
+    };
+  }
+
+  // 4. Final quality close-out is last before Completed
   return {
-    label: "Engineering",
-    stage: "engineering"
+    stage: "quality-final",
+    label: "Quality Inspector (Close-out)"
   };
 }
 
-// ------------------------
-// Get user credentials from localStorage
-// ------------------------
+// ========================
+// Credentials & permissions
+// ========================
 function getUserCredentials() {
   try {
-    const data = localStorage.getItem('userCredentials');
+    const data = localStorage.getItem("userCredentials");
     return data ? JSON.parse(data) : null;
   } catch {
     return null;
   }
 }
 
-// ------------------------
-// Check if user can edit based on workflow stage
-// ------------------------
+// Who can edit which stage
 function canUserEdit(workflowStage) {
   const credentials = getUserCredentials();
-  if (!credentials || !credentials.type || credentials.type === 'loggedOut') {
+  if (!credentials || !credentials.type || credentials.type === "loggedOut") {
     return false;
   }
 
   const userType = credentials.type;
 
-  // Map workflow stages to user roles
-  if (workflowStage === 'quality' && userType === 'Quality Inspector') {
+  // Quality initial + final close-out
+  if (
+    (workflowStage === "quality-initial" || workflowStage === "quality-final") &&
+    userType === "Quality Inspector"
+  ) {
     return true;
   }
-  if (workflowStage === 'engineering' && userType === 'Engineer') {
+
+  // Engineering
+  if (workflowStage === "engineering" && userType === "Engineer") {
     return true;
   }
-  if (workflowStage === 'quality' && userType === 'Purchasing Inspector') {
-    return true;
+
+  // Purchasing / Operations – treat any role that contains "purchasing" as valid
+  if (workflowStage === "purchasing") {
+    const normalized = String(userType).toLowerCase();
+    if (
+      normalized.includes("purchasing")
+    ) {
+      return true;
+    }
   }
-  
+
   return false;
 }
 
-// ------------------------
-// Render the table
-// ------------------------
+// ========================
+// TABLE RENDER
+// ========================
 function renderNCRTable(page = 1) {
   const tableBody = document.querySelector(".ncr-table tbody");
   if (!tableBody) return;
@@ -238,9 +227,10 @@ function renderNCRTable(page = 1) {
     const dateCreated  = d?.dateCreated  || ncr.dateCreated || "";
     const lastModified = d?.lastModified || ncr.lastModified || "";
     const supplier     = d?.supplierName || ncr.supplier || "";
-    const isCompleted  = d?.isCompleted || ncr.isCompleted || false;
 
     const workflowInfo = getWorkflowInfo(d);
+    const completedFlag = d?.isCompleted || ncr.isCompleted || false;
+    const isCompleted = completedFlag || workflowInfo.stage === "completed";
 
     const row = document.createElement("tr");
     row.dataset.ncrId = ncr.id;
@@ -249,39 +239,41 @@ function renderNCRTable(page = 1) {
       row.classList.add("ncr-completed");
     }
 
+    // --------- Actions column ----------
     let actionsHtml = "";
     const isArchived =
       (ncr.archived === true) ||
       ncrArchivedData.some(a => a.id === ncr.id);
 
-    // Check if current user can edit this NCR based on workflow stage
-    const userCanEdit = canUserEdit(workflowInfo.stage);
     const userCredentials = getUserCredentials();
-    const isUserLoggedIn = userCredentials && userCredentials.type && userCredentials.type !== 'loggedOut';
+    const isUserLoggedIn =
+      userCredentials && userCredentials.type && userCredentials.type !== "loggedOut";
 
-    if (!isCompleted && !isArchived) {
-      // Only show Edit button if user has permission for this workflow stage
-      if (userCanEdit) {
-        actionsHtml = `
+    if (isUserLoggedIn) {
+      const userCanEdit = canUserEdit(workflowInfo.stage);
+
+      if (!isCompleted && !isArchived) {
+        if (userCanEdit) {
+          // Current stage owner gets Edit
+          actionsHtml = `
           <button type="button" class="btn btn-secondary"
             aria-label="Edit ${ncr.ncrNumber}"
             onclick="openEdit('${ncr.ncrNumber}', '${dateCreated}', '${(supplier || "").toString().replace(/'/g, "\\'")}')">
             Edit
           </button>
         `;
-      } else {
-        // Show View button for users who can't edit this stage - opens edit page in read-only mode
-        actionsHtml = `
+        } else {
+          // Other roles get View (read-only)
+          actionsHtml = `
           <button type="button" class="btn btn-outline"
             aria-label="View ${ncr.ncrNumber}"
             onclick="openView('${ncr.ncrNumber}', '${dateCreated}', '${(supplier || "").toString().replace(/'/g, "\\'")}')">
             View
           </button>
         `;
-      }
+        }
 
-      // Only show Archive button if user is logged in
-      if (isUserLoggedIn) {
+        // Archive is allowed for any logged-in user while active
         actionsHtml += `
           <button type="button" class="btn btn-outline"
             aria-label="Archive ${ncr.ncrNumber}"
@@ -290,26 +282,42 @@ function renderNCRTable(page = 1) {
           </button>
         `;
       }
-    }
 
-    if (isArchived && isUserLoggedIn) {
-      actionsHtml += `
+      if (isArchived) {
+        actionsHtml += `
         <button type="button" class="btn btn-secondary"
           aria-label="Un-archive ${ncr.ncrNumber}"
           onclick="showUnarchiveConfirmation(${ncr.id}, '${ncr.ncrNumber}')">
           Un-archive
         </button>
       `;
-    }
+      }
 
-    if (isCompleted) {
-      actionsHtml += `
+      if (isCompleted) {
+        // Logged-in users still only get PDF on completed rows
+        actionsHtml += `
         <button type="button" class="btn btn-outline"
           aria-label="Download ${ncr.ncrNumber} as PDF"
           onclick="downloadPDF('${ncr.ncrNumber}')">
           PDF
         </button>
       `;
+      }
+    } else {
+      // Not logged in:
+      // - In-progress NCRs → no actions
+      // - Completed NCRs → PDF only
+      if (isCompleted) {
+        actionsHtml = `
+        <button type="button" class="btn btn-outline"
+          aria-label="Download ${ncr.ncrNumber} as PDF"
+          onclick="downloadPDF('${ncr.ncrNumber}')">
+          PDF
+        </button>
+      `;
+      } else {
+        actionsHtml = '<span class="no-actions">—</span>';
+      }
     }
 
     row.innerHTML = `
@@ -337,9 +345,9 @@ function renderNCRTable(page = 1) {
   }
 }
 
-// ------------------------
-// Archive flow
-// ------------------------
+// ========================
+// Archive / Unarchive
+// ========================
 function showArchiveConfirmation(ncrId, ncrNumber) {
   const modal = document.getElementById("archive-modal");
   const ncrNumberSpan = document.getElementById("archive-ncr-number");
@@ -372,9 +380,6 @@ function archiveNCR(ncrId) {
   filterNCRData(1);
 }
 
-// ------------------------
-// Un-archive flow
-// ------------------------
 function unarchiveNCR(ncrId) {
   const idx = ncrArchivedData.findIndex(r => r.id === ncrId);
   if (idx >= 0) {
@@ -416,9 +421,9 @@ function closeUnarchiveModal() {
   }
 }
 
-// ------------------------
-// PDF helper functions
-// ------------------------
+// ========================
+// PDF helpers
+// ========================
 function getSupplierText(value) {
   const suppliers = {
     "1": "ABC Supplier",
@@ -463,7 +468,6 @@ function formatProcessApplicable(values) {
   return values.map(v => labels[v] || v).join(", ");
 }
 
-// Kept in case you still want a combined text somewhere else
 function formatEngineeringActions(eng) {
   if (!eng) return "None selected";
 
@@ -478,72 +482,76 @@ function formatEngineeringActions(eng) {
   return actions.length ? actions.join(", ") : "None selected";
 }
 
-// ------------------------
-// PDF View Modal
-// ------------------------
-function downloadPDF(ncrNumber) {
-  const detailsMap = getDetailsMap();
-  const details = detailsMap[ncrNumber];
+// ===== New richer PDF HTML builder (Quality + Engineering + Purchasing + Final) =====
+function pdfSafe(v, fallback = "Not provided") {
+  if (v === undefined || v === null || v === "") return fallback;
+  return String(v);
+}
 
+function pdfYesNo(v) {
+  if (v === "yes" || v === true) return "Yes";
+  if (v === "no" || v === false) return "No";
+  if (v === undefined || v === null || v === "") return "Not specified";
+  return String(v);
+}
+
+function pdfDate(v) {
+  return v ? String(v) : "Not provided";
+}
+
+function buildPdfPreviewHtml(details, summaryRow) {
   if (!details) {
-    alert("NCR details not found.");
-    return;
+    return "<p>No detailed data was found for this NCR.</p>";
   }
 
-  const overlay = document.getElementById("pdf-view-overlay");
-  const content = document.getElementById("pdf-view-content");
-  if (!overlay || !content) return;
-
-  const eng = details.engineering || {};
-
-  const html = `
-    <div class="pdf-section">
-      <h3 class="pdf-section-title">NCR Information</h3>
+  const headerHtml = `
+    <section class="pdf-section">
+      <h3 class="pdf-section-title">Quality Inspector – Header &amp; Line Items</h3>
       <div class="pdf-field-group">
         <div class="pdf-field">
           <div class="pdf-field-label">NCR Number</div>
-          <div class="pdf-field-value">${details.ncrNumber || "N/A"}</div>
+          <div class="pdf-field-value">${pdfSafe(details.ncrNumber)}</div>
         </div>
         <div class="pdf-field">
           <div class="pdf-field-label">Date Created</div>
-          <div class="pdf-field-value">${details.dateCreated || "N/A"}</div>
+          <div class="pdf-field-value">${pdfDate(details.dateCreated)}</div>
         </div>
         <div class="pdf-field">
           <div class="pdf-field-label">Last Modified</div>
-          <div class="pdf-field-value">${details.lastModified || "N/A"}</div>
+          <div class="pdf-field-value">${pdfDate(details.lastModified)}</div>
         </div>
         <div class="pdf-field">
           <div class="pdf-field-label">Status</div>
-          <div class="pdf-field-value">${details.status || "Open"}</div>
+          <div class="pdf-field-value">${pdfSafe(details.status || "Open")}</div>
         </div>
       </div>
-    </div>
 
-    <div class="pdf-section">
-      <h3 class="pdf-section-title">Order Information</h3>
       <div class="pdf-field-group">
         <div class="pdf-field">
-          <div class="pdf-field-label">Purchase Order</div>
+          <div class="pdf-field-label">Purchase Order #</div>
           <div class="pdf-field-value ${!details.purchaseOrder ? "empty" : ""}">
-            ${details.purchaseOrder || "Not provided"}
+            ${pdfSafe(details.purchaseOrder)}
           </div>
         </div>
         <div class="pdf-field">
-          <div class="pdf-field-label">Sales Order</div>
+          <div class="pdf-field-label">Sales Order #</div>
           <div class="pdf-field-value ${!details.salesOrder ? "empty" : ""}">
-            ${details.salesOrder || "Not provided"}
+            ${pdfSafe(details.salesOrder)}
+          </div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Item Marked Nonconforming</div>
+          <div class="pdf-field-value">
+            ${pdfYesNo(details.itemNonconforming)}
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="pdf-section">
-      <h3 class="pdf-section-title">Supplier &amp; Process</h3>
       <div class="pdf-field-group">
         <div class="pdf-field">
           <div class="pdf-field-label">Supplier</div>
           <div class="pdf-field-value">
-            ${details.supplierName || getSupplierText(details.supplierValue)}
+            ${pdfSafe(details.supplierName || (summaryRow && summaryRow.supplier) || getSupplierText(details.supplierValue))}
           </div>
         </div>
         <div class="pdf-field">
@@ -559,10 +567,7 @@ function downloadPDF(ncrNumber) {
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="pdf-section">
-      <h3 class="pdf-section-title">Product Information</h3>
       <div class="pdf-field-group">
         <div class="pdf-field">
           <div class="pdf-field-label">Product</div>
@@ -578,17 +583,8 @@ function downloadPDF(ncrNumber) {
           <div class="pdf-field-label">Defective Quantity</div>
           <div class="pdf-field-value">${details.defectQty ?? "N/A"}</div>
         </div>
-        <div class="pdf-field">
-          <div class="pdf-field-label">Item Marked Nonconforming</div>
-          <div class="pdf-field-value">
-            ${details.itemNonconforming || "N/A"}
-          </div>
-        </div>
       </div>
-    </div>
 
-    <div class="pdf-section">
-      <h3 class="pdf-section-title">Issue Details</h3>
       <div class="pdf-field-group">
         <div class="pdf-field">
           <div class="pdf-field-label">Issue Category</div>
@@ -596,86 +592,253 @@ function downloadPDF(ncrNumber) {
             ${getIssueCategoryText(details.issueCategoryValue)}
           </div>
         </div>
-        <div class="pdf-field full-width">
-          <div class="pdf-field-label">Defect Description</div>
-          <div class="pdf-field-value multiline ${!details.defectDescription ? "empty" : ""}">
-            ${details.defectDescription || "No description provided"}
-          </div>
-        </div>
       </div>
-    </div>
 
-    <div class="pdf-section">
-      <h3 class="pdf-section-title">Inspection Information</h3>
       <div class="pdf-field-group">
         <div class="pdf-field">
           <div class="pdf-field-label">Inspected By</div>
-          <div class="pdf-field-value">${details.inspectedBy || "N/A"}</div>
+          <div class="pdf-field-value">${pdfSafe(details.inspectedBy, "N/A")}</div>
         </div>
         <div class="pdf-field">
           <div class="pdf-field-label">Inspection Date</div>
-          <div class="pdf-field-value">${details.inspectedOn || "N/A"}</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ENGINEERING SECTION WITH YES/NO FIELDS -->
-    <div class="pdf-section">
-      <h3 class="pdf-section-title">Engineering</h3>
-
-      <div class="pdf-field-group">
-        <div class="pdf-field">
-          <div class="pdf-field-label">Use As-Is</div>
-          <div class="pdf-field-value">${eng.useAsIs ? "Yes" : "No"}</div>
-        </div>
-        <div class="pdf-field">
-          <div class="pdf-field-label">Repair</div>
-          <div class="pdf-field-value">${eng.repair ? "Yes" : "No"}</div>
-        </div>
-        <div class="pdf-field">
-          <div class="pdf-field-label">Rework</div>
-          <div class="pdf-field-value">${eng.rework ? "Yes" : "No"}</div>
-        </div>
-      </div>
-
-      <div class="pdf-field-group">
-        <div class="pdf-field">
-          <div class="pdf-field-label">Scrap</div>
-          <div class="pdf-field-value">${eng.scrap ? "Yes" : "No"}</div>
-        </div>
-        <div class="pdf-field">
-          <div class="pdf-field-label">Customer Notification / NCR</div>
-          <div class="pdf-field-value">${eng.custNotifNCR ? "Yes" : "No"}</div>
-        </div>
-        <div class="pdf-field">
-          <div class="pdf-field-label">Drawing / Spec Requires Update</div>
-          <div class="pdf-field-value">${eng.drawingReqUpd ? "Yes" : "No"}</div>
+          <div class="pdf-field-value">${pdfDate(details.inspectedOn)}</div>
         </div>
       </div>
 
       <div class="pdf-field-group">
         <div class="pdf-field full-width">
-          <div class="pdf-field-label">Disposition</div>
-          <div class="pdf-field-value multiline">${eng.disposition || "N/A"}</div>
+          <div class="pdf-field-label">Defect Description</div>
+          <div class="pdf-field-value multiline ${!details.defectDescription ? "empty" : ""}">
+            ${pdfSafe(details.defectDescription, "No description provided")}
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+
+  const eng = details.engineering || {};
+  const engActions = [];
+  if (eng.useAsIs) engActions.push("Use As-Is");
+  if (eng.repair) engActions.push("Repair");
+  if (eng.rework) engActions.push("Rework");
+  if (eng.scrap) engActions.push("Scrap");
+  if (eng.custNotifNCR) engActions.push("Customer Notification / NCR");
+  if (eng.drawingReqUpd) engActions.push("Drawing / Spec Requires Update");
+
+  const engineeringHtml = `
+    <section class="pdf-section">
+      <h3 class="pdf-section-title">Engineering Disposition &amp; Actions</h3>
+
+      <div class="pdf-field-group">
+        <div class="pdf-field full-width">
+          <div class="pdf-field-label">Disposition Choices</div>
+          <div class="pdf-field-value ${engActions.length === 0 ? "empty" : ""}">
+            ${engActions.length ? engActions.join(", ") : "No disposition selected"}
+          </div>
+        </div>
+      </div>
+
+      <div class="pdf-field-group">
+        <div class="pdf-field full-width">
+          <div class="pdf-field-label">Disposition Notes</div>
+          <div class="pdf-field-value multiline ${!eng.disposition ? "empty" : ""}">
+            ${pdfSafe(eng.disposition, "No notes provided")}
+          </div>
         </div>
       </div>
 
       <div class="pdf-field-group">
         <div class="pdf-field">
-          <div class="pdf-field-label">Engineer</div>
-          <div class="pdf-field-value">${eng.nameOfEng || "N/A"}</div>
+          <div class="pdf-field-label">Engineer Name</div>
+          <div class="pdf-field-value">${pdfSafe(eng.nameOfEng, "Not provided")}</div>
         </div>
         <div class="pdf-field">
-          <div class="pdf-field-label">Engineering Date</div>
-          <div class="pdf-field-value">
-            ${eng.engDate || eng.engineeringDate || eng.engDateValue || eng.RevisionDate || "N/A"}
+          <div class="pdf-field-label">Original Rev #</div>
+          <div class="pdf-field-value">${pdfSafe(eng.origRevNum, "Not provided")}</div>
+        </div>
+      </div>
+
+      <div class="pdf-field-group">
+        <div class="pdf-field">
+          <div class="pdf-field-label">Updated Revision (Date/Time)</div>
+          <div class="pdf-field-value">${pdfDate(eng.UpdatedRev)}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Revision Date</div>
+          <div class="pdf-field-value">${pdfDate(eng.RevisionDate)}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Submitted Date</div>
+          <div class="pdf-field-value">${pdfDate(eng.submittedDate)}</div>
+        </div>
+      </div>
+    </section>
+  `;
+
+  const purch = details.purchasing || {};
+  const purchDecisions = [];
+  if (purch.reworkInHouse) purchDecisions.push("Rework In-House");
+  if (purch.scrapInHouse) purchDecisions.push("Scrap In-House");
+  if (purch.deferForHbcReview) purchDecisions.push("Defer for HBC Engineering Review");
+
+  const purchasingHtml = `
+    <section class="pdf-section">
+      <h3 class="pdf-section-title">Purchasing / Operations</h3>
+
+      <div class="pdf-field-group">
+        <div class="pdf-field full-width">
+          <div class="pdf-field-label">Preliminary Decisions</div>
+          <div class="pdf-field-value ${purchDecisions.length === 0 ? "empty" : ""}">
+            ${purchDecisions.length ? purchDecisions.join(", ") : "No decisions selected"}
           </div>
         </div>
       </div>
-    </div>
+
+      <div class="pdf-field-group">
+        <div class="pdf-field">
+          <div class="pdf-field-label">CAR Raised?</div>
+          <div class="pdf-field-value">${pdfYesNo(purch.carRaised)}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">CAR #</div>
+          <div class="pdf-field-value">${pdfSafe(purch.carNumber, "Not provided")}</div>
+        </div>
+      </div>
+
+      <div class="pdf-field-group">
+        <div class="pdf-field">
+          <div class="pdf-field-label">Follow-Up Required?</div>
+          <div class="pdf-field-value">${pdfYesNo(purch.followUpRequired)}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Follow-Up Type</div>
+          <div class="pdf-field-value">${pdfSafe(purch.followUpType, "Not provided")}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Expected Follow-Up Date</div>
+          <div class="pdf-field-value">${pdfDate(purch.followUpDate)}</div>
+        </div>
+      </div>
+
+      <div class="pdf-field-group">
+        <div class="pdf-field">
+          <div class="pdf-field-label">Operations Manager</div>
+          <div class="pdf-field-value">${pdfSafe(purch.opsManagerName, "Not provided")}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Operations Approval Date</div>
+          <div class="pdf-field-value">${pdfDate(purch.opsManagerDate)}</div>
+        </div>
+      </div>
+    </section>
   `;
 
-  content.innerHTML = html;
+  const fin = details.finalInspection || {};
+  const finalHtml = `
+    <section class="pdf-section">
+      <h3 class="pdf-section-title">Final Quality Re-Inspection &amp; Closure</h3>
+
+      <div class="pdf-field-group">
+        <div class="pdf-field">
+          <div class="pdf-field-label">Re-Inspected Acceptable?</div>
+          <div class="pdf-field-value">${pdfYesNo(fin.reinspectedAcceptable)}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">New NCR # (if not acceptable)</div>
+          <div class="pdf-field-value">${pdfSafe(fin.newNcrNumber, "Not generated")}</div>
+        </div>
+      </div>
+
+      <div class="pdf-field-group">
+        <div class="pdf-field">
+          <div class="pdf-field-label">Re-Inspecting Inspector</div>
+          <div class="pdf-field-value">${pdfSafe(fin.inspectorName, "Not provided")}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Re-Inspection Date</div>
+          <div class="pdf-field-value">${pdfDate(fin.inspectorDate)}</div>
+        </div>
+      </div>
+
+      <div class="pdf-field-group">
+        <div class="pdf-field">
+          <div class="pdf-field-label">NCR Closed?</div>
+          <div class="pdf-field-value">${pdfYesNo(fin.ncrClosed)}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Quality Dept. Representative</div>
+          <div class="pdf-field-value">${pdfSafe(fin.qualityDeptName, "Not provided")}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Closure Date</div>
+          <div class="pdf-field-value">${pdfDate(fin.closeDate)}</div>
+        </div>
+      </div>
+    </section>
+  `;
+
+  const summaryHtml = `
+    <section class="pdf-section pdf-summary">
+      <h3 class="pdf-section-title">Document Summary</h3>
+      <div class="pdf-field-group">
+        <div class="pdf-field">
+          <div class="pdf-field-label">Document Author (Initial Inspector)</div>
+          <div class="pdf-field-value">${pdfSafe(details.inspectedBy, "Not specified")}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Date Created</div>
+          <div class="pdf-field-value">${pdfDate(details.dateCreated)}</div>
+        </div>
+      </div>
+
+      <div class="pdf-field-group">
+        <div class="pdf-field">
+          <div class="pdf-field-label">Approved By (Operations Manager)</div>
+          <div class="pdf-field-value">${pdfSafe((details.purchasing || {}).opsManagerName, "Not specified")}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Engineering Revision Date</div>
+          <div class="pdf-field-value">${pdfDate((details.engineering || {}).RevisionDate)}</div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Original Rev #</div>
+          <div class="pdf-field-value">${pdfSafe((details.engineering || {}).origRevNum, "Not specified")}</div>
+        </div>
+      </div>
+    </section>
+  `;
+
+  return `
+    <div class="pdf-document">
+      ${headerHtml}
+      ${engineeringHtml}
+      ${purchasingHtml}
+      ${finalHtml}
+      ${summaryHtml}
+    </div>
+  `;
+}
+
+// ========================
+// PDF view modal
+// ========================
+function downloadPDF(ncrNumber) {
+  const detailsMap = getDetailsMap();
+  const details = detailsMap[ncrNumber];
+
+  if (!details) {
+    alert("NCR details not found.");
+    return;
+  }
+
+  const overlay = document.getElementById("pdf-view-overlay");
+  const content = document.getElementById("pdf-view-content");
+  if (!overlay || !content) return;
+
+  const allRows = [...ncrData, ...ncrArchivedData];
+  const summaryRow = allRows.find(r => r.ncrNumber === ncrNumber) || null;
+
+  content.innerHTML = buildPdfPreviewHtml(details, summaryRow);
   overlay.classList.add("active");
   overlay.setAttribute("aria-hidden", "false");
 }
@@ -688,9 +851,9 @@ function closePDFView() {
   }
 }
 
-// ------------------------
+// ========================
 // Filters
-// ------------------------
+// ========================
 function getSupplierFilterText() {
   const el =
     document.querySelector("#ncr-search") ||
@@ -722,7 +885,7 @@ function getActiveDataset() {
 
 function filterNCRData(page = 1) {
   const supplierTerm = getSupplierFilterText();
-  const workflowFilter = getWorkflowFilterValue(); // "", "completed", "quality", "engineering"
+  const workflowFilter = getWorkflowFilterValue(); // "", "completed", "quality", "engineering", "purchasing"
   const activeSet = getActiveDataset();
   const detailsMap = getDetailsMap();
 
@@ -740,10 +903,17 @@ function filterNCRData(page = 1) {
     if (!matchesSupplier) return false;
 
     if (!workflowFilter) return true; // all stages
+
+    if (workflowFilter === "quality") {
+      // both quality stages
+      return wfInfo.stage === "quality-initial" || wfInfo.stage === "quality-final";
+    }
+
+    // engineering, purchasing, completed, etc.
     return wfInfo.stage === workflowFilter;
   });
 
-  // Sort by dateCreated (newest), then lastModified, then id (newest)
+  // Sort newest first
   const getDatesFor = (record) => {
     const d = detailsMap[record.ncrNumber] || {};
     const dateCreated = d.dateCreated || record.dateCreated || "";
@@ -758,16 +928,13 @@ function filterNCRData(page = 1) {
     const tCreatedA = da.dateCreated ? Date.parse(da.dateCreated) : 0;
     const tCreatedB = db.dateCreated ? Date.parse(db.dateCreated) : 0;
 
-    // 1) Newest CREATED first
     if (tCreatedB !== tCreatedA) return tCreatedB - tCreatedA;
 
     const tModA = da.lastModified ? Date.parse(da.lastModified) : 0;
     const tModB = db.lastModified ? Date.parse(db.lastModified) : 0;
 
-    // 2) Tie-breaker: newest LAST MODIFIED first
     if (tModB !== tModA) return tModB - tModA;
 
-    // 3) Final tie-breaker: highest ID is newest
     const idA = typeof a.id === "number" ? a.id : 0;
     const idB = typeof b.id === "number" ? b.id : 0;
     return idB - idA;
@@ -776,9 +943,9 @@ function filterNCRData(page = 1) {
   renderNCRTable(page);
 }
 
-// ------------------------
-// Populate supplier dropdown
-// ------------------------
+// ========================
+// Dropdown + events
+// ========================
 function populateSupplierDropdown() {
   const dropdown = document.querySelector("#ncr-search");
   if (!dropdown) return;
@@ -804,9 +971,6 @@ function populateSupplierDropdown() {
   });
 }
 
-// ------------------------
-// UI setup
-// ------------------------
 function setupFilterEventListener() {
   const searchEl = document.querySelector("#ncr-search");
   if (searchEl) {
@@ -848,9 +1012,9 @@ function setupModalEventListeners() {
   });
 }
 
-// ------------------------
-// Init on load
-// ------------------------
+// ========================
+// Init
+// ========================
 document.addEventListener("DOMContentLoaded", function () {
   const checked = document.querySelector('input[name="ncr-active"]:checked');
   if (!checked) {
@@ -870,18 +1034,15 @@ document.addEventListener("DOMContentLoaded", function () {
   filterNCRData(1);
 });
 
-// ------------------------
-// Edit navigation helper
-// ------------------------
+// ========================
+// Navigation helpers
+// ========================
 function openEdit(ncrNumber, dateCreated, supplier) {
   const params = new URLSearchParams({ ncr: ncrNumber, dateCreated, supplier });
   window.location.href = `edit.html?${params.toString()}`;
 }
 
-// ------------------------
-// View navigation helper (read-only mode)
-// ------------------------
 function openView(ncrNumber, dateCreated, supplier) {
-  const params = new URLSearchParams({ ncr: ncrNumber, dateCreated, supplier, readonly: 'true' });
+  const params = new URLSearchParams({ ncr: ncrNumber, dateCreated, supplier, readonly: "true" });
   window.location.href = `edit.html?${params.toString()}`;
 }

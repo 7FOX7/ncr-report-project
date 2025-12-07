@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home - NCR Management System</title>
+    <title>Login - NCR Management System</title>
     <link rel="stylesheet" href="../styles.css">
   </head>
   <body>
@@ -15,6 +15,7 @@
              class="logo"
              draggable="false">
 
+        <!-- Hamburger / mobile nav -->
         <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation menu">
         <label for="nav-toggle" class="nav-toggle-label">
           <span class="hamburger"></span>
@@ -24,6 +25,7 @@
           <ul>
             <li><a href="index.html">Home</a></li>
             <li><a href="about.html">About</a></li>
+            <!-- This text will be switched to "Logout" by credentials.js when logged in -->
             <li><a href="login.html" aria-current="page" id="login-nav-link">Login</a></li>
           </ul>
         </nav>
@@ -31,43 +33,71 @@
     </header>
 
     <nav aria-label="Breadcrumb" class="breadcrumb">
-        <ol>
-            <li><a href="index.html">Home</a></li>
-            <li><span aria-current="page">Login</span></li>
-        </ol>
+      <ol>
+        <li><a href="index.html">Home</a></li>
+        <li><span aria-current="page">Login</span></li>
+      </ol>
     </nav>
 
     <main>
-        <h1 id="login-heading">Login</h1>
-        <button class="btn btn-primary">[DEMO] Login as Quality Inspector</button>
-        <button class="btn btn-primary">[DEMO] Login as Engineer</button>
-        <button class="btn btn-primary">[DEMO] Login as Purchasing Inspector</button>
+      <h1 id="login-heading">Login</h1>
 
-        <section class="login-content" aria-labelledby="login-heading">
-          <div class="about-message">
-            <form id="login-form" aria-describedby="login-description">
-              <div id="login-description" class="sr-only">
-                Please enter your username and password to log in.
-              </div>
+      <!-- DEMO QUICK-LOGIN BUTTONS -->
+      <!-- These are for your project demo – they set the role directly in localStorage -->
+      <div class="login-demo-buttons" style="margin-bottom: 1.5rem;">
+        <p style="margin-bottom: 0.75rem;">
+          For demo purposes, you can log in directly as a specific role:
+        </p>
+        <button class="btn btn-primary login-demo-btn" data-role="Quality Inspector" type="button">
+          [DEMO] Login as Quality Inspector
+        </button>
+        <button class="btn btn-primary login-demo-btn" data-role="Engineer" type="button">
+          [DEMO] Login as Engineer
+        </button>
+        <button class="btn btn-primary login-demo-btn" data-role="Purchasing/Operations" type="button">
+          [DEMO] Login as Purchasing / Operations
+        </button>
+      </div>
 
-              <div class="form-group">
-                <label for="username">Username:</label>
-                <input type="text" id="username" name="username" required aria-required="true">
-              </div>
+      <!-- NORMAL LOGIN SECTION (username + password) -->
+      <section class="login-content" aria-labelledby="login-heading">
+        <div class="about-message">
+          <p id="login-description" style="margin-bottom: 1rem;">
+            Please enter your username and password to log in.  
+            (For now, this just maps to one of the NCR roles.)
+          </p>
 
-              <div class="form-group">
-                <label for="password">Password:</label>
-                <input type="text" id="password" name="password" required aria-required="true">
-              </div>
+          <form id="login-form" aria-describedby="login-description">
+            <div class="form-group">
+              <label for="username">Username:</label>
+              <input 
+                type="text" 
+                id="username" 
+                name="username" 
+                required 
+                aria-required="true"
+                autocomplete="username">
+            </div>
 
-              <div class="form-group">
-                <button class="btn btn-primary" type="submit">Login</button>
-              </div>
-              
-              <div id="login-error" class="error-message" role="alert" aria-live="assertive"></div>
-            </form>
-          </div>
-        </section>
+            <div class="form-group">
+              <label for="password">Password:</label>
+              <input 
+                type="password" 
+                id="password" 
+                name="password" 
+                required 
+                aria-required="true"
+                autocomplete="current-password">
+            </div>
+
+            <div class="form-group">
+              <button class="btn btn-primary" type="submit">Login</button>
+            </div>
+            
+            <div id="login-error" class="error-message" role="alert" aria-live="assertive"></div>
+          </form>
+        </div>
+      </section>
 
     </main>
 
@@ -77,6 +107,7 @@
       </div>
     </footer>
 
+    <!-- Scripts (order is important: ncr-data / pagination, then credentials) -->
     <script src="../code/ncr-data.js"></script>
     <script src="../code/pagination.js"></script>
     <script src="../code/credentials.js"></script>

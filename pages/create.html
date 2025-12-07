@@ -41,7 +41,7 @@
       </div>
       
       <form id="ncr-form" class="ncr-form" novalidate>
-        <!-- NCR MAIN -->
+        <!-- NCR MAIN / QUALITY INSPECTOR PART 1 -->
         <fieldset class="collapsible-fieldset">
           <input type="radio" id="header-toggle" name="fieldset-toggle" class="fieldset-toggle" checked aria-label="Toggle NCR Header Information section">
           <label for="header-toggle" class="fieldset-toggle-label">
@@ -148,7 +148,7 @@
           </div>
         </fieldset>
 
-        <!-- NCR LINE -->
+        <!-- NCR LINE (will be merged into header by JS if you reuse merge function here too) -->
         <fieldset class="collapsible-fieldset">
           <input type="radio" id="lineitem-toggle" name="fieldset-toggle" class="fieldset-toggle" aria-label="Toggle NCR Line Item Details section">
           <label for="lineitem-toggle" class="fieldset-toggle-label">
@@ -229,8 +229,7 @@
           </div>
         </fieldset>
 
-        <!-- ATTACHMENT -->
-              <!-- ATTACHMENT -->
+        <!-- ATTACHMENT (will be merged into header by JS if you apply same logic here) -->
         <fieldset class="collapsible-fieldset">
           <input type="radio" id="attachment-toggle" name="fieldset-toggle" class="fieldset-toggle" aria-label="Toggle Attachments section">
           <label for="attachment-toggle" class="fieldset-toggle-label">
@@ -288,7 +287,7 @@
         </div>
         <div class="preview-modal-footer">
           <button type="button" class="btn btn-outline" id="btnKeepEditing">Keep Editing</button>
-          <button type="button" class="btn btn-success" id="btnConfirmCompletion">Confirm & Mark as Completed</button>
+          <button type="button" class="btn btn-success" id="btnConfirmCompletion">Confirm &amp; Mark as Completed</button>
         </div>
       </div>
     </div>
@@ -296,4 +295,4 @@
     <script src="../code/credentials.js"></script>
     <script src="../code/create.js"></script>
   </body>
-</html><!-- TODO: change the order in which validation will be made -->
+</html>

@@ -282,9 +282,71 @@ function markRequiredFields() {
   }
 }
 
+/**
+ * Merge Header + Line Item + Attachments into a single
+ * “Quality Inspector (Header, Line Items & Attachments)” accordion,
+ * same style as on the Edit page.
+ */
+function mergeQualityInspectorAccordions() {
+  const headerToggle = document.getElementById("header-toggle");
+  const lineitemToggle = document.getElementById("lineitem-toggle");
+  const attachmentToggle = document.getElementById("attachment-toggle");
+
+  if (!headerToggle || !lineitemToggle || !attachmentToggle) return;
+
+  const headerFieldset = headerToggle.closest(".collapsible-fieldset");
+  const lineitemFieldset = lineitemToggle.closest(".collapsible-fieldset");
+  const attachmentFieldset = attachmentToggle.closest(".collapsible-fieldset");
+
+  if (!headerFieldset || !lineitemFieldset || !attachmentFieldset) return;
+  if (headerFieldset.classList.contains("merged-quality-accordion")) return;
+
+  const headerLabel = headerFieldset.querySelector(".fieldset-toggle-label legend");
+  if (headerLabel) {
+    headerLabel.textContent = "Quality Inspector (Header, Line Items & Attachments)";
+  }
+
+  const headerContent = headerFieldset.querySelector(".fieldset-content");
+  const lineitemContent = lineitemFieldset.querySelector(".fieldset-content");
+  const attachmentContent = attachmentFieldset.querySelector(".fieldset-content");
+
+  if (!headerContent || !lineitemContent || !attachmentContent) return;
+
+  const lineitemDivider = document.createElement("div");
+  lineitemDivider.className = "merged-section-divider";
+  lineitemDivider.innerHTML = '<h4 class="merged-section-title">NCR Line Item Details</h4>';
+
+  const attachmentDivider = document.createElement("div");
+  attachmentDivider.className = "merged-section-divider";
+  attachmentDivider.innerHTML = '<h4 class="merged-section-title">Attachments</h4>';
+
+  // Move line item contents under header
+  headerContent.appendChild(lineitemDivider);
+  lineitemContent.querySelectorAll(".form-columns").forEach(cols => {
+    headerContent.appendChild(cols);
+  });
+
+  // Move attachment contents under header
+  headerContent.appendChild(attachmentDivider);
+  attachmentContent.querySelectorAll(".form-columns").forEach(cols => {
+    headerContent.appendChild(cols);
+  });
+
+  // Hide the now-empty fieldsets
+  lineitemFieldset.style.display = "none";
+  lineitemFieldset.setAttribute("aria-hidden", "true");
+  attachmentFieldset.style.display = "none";
+  attachmentFieldset.setAttribute("aria-hidden", "true");
+
+  headerFieldset.classList.add("merged-quality-accordion");
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   // Mark required fields with asterisks
   markRequiredFields();
+
+  // Make create page Quality Inspector accordion look like Edit page
+  mergeQualityInspectorAccordions();
   
   // Add mutual exclusivity for Item Marked Nonconforming checkboxes
   const nonconformingYes = document.getElementById("item-nonconforming-yes");
@@ -497,6 +559,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const statusVal         = document.getElementById("ncr-status")?.value || "Open";
 
       //created date shown on page
+      const createdOn = document.getElementById("created-on") || document.getElementById("create-date");
       const createdOnVal = createdOn?.value || todayISO();
 
       // Clear any previous validation errors
@@ -573,6 +636,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const defectQty = Number(defectQtyStr);
 
       //persist BOTH the table row  and the full details 
+      const ncrInput = document.getElementById("ncr-number");
       const ncrNumber = ncrInput ? ncrInput.value : generateNcrNumber();
       const lastModified = todayISO();
 
@@ -617,6 +681,12 @@ document.addEventListener("DOMContentLoaded", () => {
       };
       saveJSON("ncrDetails", detailsMap);
 
+      // Friendly message when creating vs handing off
+      if (isCompleted) {
+        alert("Quality Inspector section has been completed. Engineering can now work on this NCR.");
+      } else {
+        alert("NCR saved. You can continue editing it later from the home page.");
+      }
       
       window.location.href = "index.html"; 
   } // End submitForm function
@@ -627,10 +697,12 @@ document.addEventListener("DOMContentLoaded", () => {
     resetBtn.addEventListener("click", () => {
       const form = document.getElementById("ncr-form");
       if (form) form.reset();
+      const ncrInput = document.getElementById("ncr-number");
       if (ncrInput) {
         ncrInput.value = generateNcrNumber();
         ncrInput.readOnly = true;
       }
+      const createdOn = document.getElementById("created-on") || document.getElementById("create-date");
       if (createdOn) createdOn.value = todayISO();
     });
   }

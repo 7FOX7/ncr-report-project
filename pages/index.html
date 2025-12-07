@@ -58,20 +58,22 @@
 
               <!-- LEFT COLUMN: Supplier + Workflow Stage -->
               <div class="form-column">
-                <!-- Supplier Filter (original) -->
+                <!-- Supplier Filter -->
                 <label for="ncr-search" class="search-label">Supplier</label>
                 <select id="ncr-search" name="ncr-search" aria-describedby="search-help">
                   <option value="">All Suppliers</option>
                 </select>
                 <p id="search-help" class="search-help">Filter NCR records by supplier</p>
               </div>
+
               <div class="form-column">
                 <label for="workflow-filter" class="search-label">Workflow Stage</label>
                 <select id="workflow-filter" name="workflow-filter" aria-describedby="workflow-help">
                   <option value="">All stages</option>
-                  <option value="completed">Completed</option>
                   <option value="quality">Quality Inspector</option>
                   <option value="engineering">Engineering</option>
+                  <option value="purchasing">Purchasing / Operations</option>
+                  <option value="completed">Completed</option>
                 </select>
                 <p id="workflow-help" class="search-help">
                   Filter NCR records by the current workflow stage.
@@ -122,7 +124,6 @@
                 <th scope="col">Date Created</th>
                 <th scope="col">Last Modified</th>
                 <th scope="col">Supplier</th>
-                <!-- NEW COLUMN: workflow / stage -->
                 <th scope="col">Workflow Stage</th>
                 <th scope="col">Actions</th>
               </tr>
