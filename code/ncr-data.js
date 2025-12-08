@@ -304,20 +304,8 @@ function renderNCRTable(page = 1) {
       `;
       }
     } else {
-      // Not logged in:
-      // - In-progress NCRs → no actions
-      // - Completed NCRs → PDF only
-      if (isCompleted) {
-        actionsHtml = `
-        <button type="button" class="btn btn-outline"
-          aria-label="Download ${ncr.ncrNumber} as PDF"
-          onclick="downloadPDF('${ncr.ncrNumber}')">
-          PDF
-        </button>
-      `;
-      } else {
-        actionsHtml = '<span class="no-actions">—</span>';
-      }
+      // Not logged in: no actions at all
+      actionsHtml = '<span class="no-actions">Login required</span>';
     }
 
     row.innerHTML = `
