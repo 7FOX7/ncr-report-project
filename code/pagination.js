@@ -19,6 +19,11 @@ function renderPaginationControls(totalItems, itemsPerPage, currentPage = 1) {
         btn.setAttribute('aria-label', `Page ${i}`);
         if (i === currentPage) btn.setAttribute('aria-current', 'page');
         btn.textContent = i;
+        // Add click event listener to each page button
+        btn.addEventListener('click', function() {
+            const pageNumber = parseInt(this.textContent);
+            selectPage(pageNumber);
+        });
         paginationPagesContainer.appendChild(btn);
     }
     // After rendering pages, update Prev/Next enabled state based on currentPage
@@ -34,40 +39,44 @@ document.addEventListener("DOMContentLoaded", () => {
     setupPaginationControls();
 });
 
+// Flag to ensure event listeners are only attached once
+let paginationControlsInitialized = false;
+
 function setupPaginationControls() {
-    const paginationPages = document.querySelectorAll('.pagination-btn-page');
+    if (paginationControlsInitialized) return;
+    paginationControlsInitialized = true;
+    
     const prevButton = document.querySelector('.pagination-btn-prev');
     const nextButton = document.querySelector('.pagination-btn-next');
     
-    // Add click event listeners to page buttons
-    paginationPages.forEach(button => {
-        button.addEventListener('click', function() {
-            const pageNumber = parseInt(this.textContent);
-            selectPage(pageNumber);
-        });
-    });
-    
-    // Add click event listeners to prev/next buttons
+    // Add click event listeners to prev/next buttons (these are static elements)
     if (prevButton) {
-        prevButton.addEventListener('click', function() {
+        prevButton.addEventListener('click', function(e) {
+            e.preventDefault();
             if (!this.disabled) {
                 const currentPage = getCurrentPage();
                 const newPage = Math.max(1, currentPage - 1);
+                console.log('Prev clicked: current=' + currentPage + ', new=' + newPage);
                 selectPage(newPage);
             }
         });
     }
     
     if (nextButton) {
-        nextButton.addEventListener('click', function() {
+        nextButton.addEventListener('click', function(e) {
+            e.preventDefault();
             if (!this.disabled) {
                 const currentPage = getCurrentPage();
                 const maxPage = getMaxPage();
                 const newPage = Math.min(maxPage, currentPage + 1);
+                console.log('Next clicked: current=' + currentPage + ', max=' + maxPage + ', new=' + newPage);
                 selectPage(newPage);
             }
         });
     }
+    
+    // Note: Page buttons are dynamically created and get their event listeners
+    // in renderPaginationControls() function
 }
 
 function getCurrentPage() {

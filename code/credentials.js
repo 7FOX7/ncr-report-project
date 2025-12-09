@@ -63,8 +63,8 @@ function handleLogin(role) {
 
 function handleLogout() {
   LoggedOut();
-  // Reload current page so UI updates
-  window.location.reload();
+  // Redirect to login page
+  window.location.href = 'login.html';
 }
 
 // ---------------------- NAVBAR TEXT ----------------------
@@ -76,6 +76,8 @@ function updateNavbarLoginLink() {
     return;
   }
 
+  const homeNavItem = document.getElementById('home-nav-item');
+
   console.log('Updating navbar link, isLoggedIn:', isLoggedIn());
 
   if (isLoggedIn()) {
@@ -85,9 +87,13 @@ function updateNavbarLoginLink() {
       e.preventDefault();
       handleLogout();
     });
+    // Show Home link when logged in
+    if (homeNavItem) homeNavItem.style.display = '';
   } else {
     loginNavLink.textContent = 'Login';
     // Default behavior: go to login.html
+    // Hide Home link when not logged in
+    if (homeNavItem) homeNavItem.style.display = 'none';
   }
 }
 

@@ -22,7 +22,7 @@
 
         <nav role="navigation" aria-label="Main navigation" class="nav">
           <ul>
-            <li><a href="index.html" aria-current="page">Home</a></li>
+            <li id="home-nav-item"><a href="index.html" aria-current="page">Home</a></li>
             <li><a href="about.html">About</a></li>
             <li><a href="login.html" id="login-nav-link">Login</a></li>
           </ul>
@@ -56,9 +56,7 @@
           <div class="search-content">
             <div class="search-columns">
 
-              <!-- LEFT COLUMN: Supplier + Workflow Stage -->
-              <div class="form-column">
-                <!-- Supplier Filter -->
+              <div class="search-column">
                 <label for="ncr-search" class="search-label">Supplier</label>
                 <select id="ncr-search" name="ncr-search" aria-describedby="search-help">
                   <option value="">All Suppliers</option>
@@ -66,39 +64,21 @@
                 <p id="search-help" class="search-help">Filter NCR records by supplier</p>
               </div>
 
-              <div class="form-column">
-                <label for="workflow-filter" class="search-label">Workflow Stage</label>
-                <select id="workflow-filter" name="workflow-filter" aria-describedby="workflow-help">
-                  <option value="">All stages</option>
-                  <option value="quality">Quality Inspector</option>
-                  <option value="engineering">Engineering</option>
-                  <option value="purchasing">Purchasing / Operations</option>
-                  <option value="completed">Completed</option>
-                </select>
-                <p id="workflow-help" class="search-help">
-                  Filter NCR records by the current workflow stage.
+              <div class="search-column">
+                <div class="search-row end-align">
+                  <input type="checkbox" id="show-completed" name="show-completed" value="show">
+                  <label for="show-completed" class="search-label">Show completed records</label>
+                </div>
+                <p id="status-completed" class="status-help">
+                  Show completed NCR records
                 </p>
-              </div>
-
-              <!-- RIGHT COLUMN: Active / Archived / All -->
-              <div class="form-column">
-                <div class="search-row end-align">
-                  <input type="radio" id="search-active" name="ncr-active" value="active" checked>
-                  <label for="search-active" class="search-label">Active records</label>
-                </div>
 
                 <div class="search-row end-align">
-                  <input type="radio" id="search-archived" name="ncr-active" value="archived">
-                  <label for="search-archived" class="search-label">Archived records</label>
+                  <input type="checkbox" id="show-closed" name="show-closed" value="show">
+                  <label for="show-closed" class="search-label">Show closed records</label>
                 </div>
-
-                <div class="search-row end-align">
-                  <input type="radio" id="search-all" name="ncr-active" value="all">
-                  <label for="search-all" class="search-label">All records</label>
-                </div>
-
-                <p id="status-help" class="status-help">
-                  View active or archived NCR records
+                <p id="status-closed" class="status-help">
+                  Show closed NCR records
                 </p>
               </div>
 
@@ -159,56 +139,13 @@
               <select name="search-amount" id="search-amount" class="records-per-page-select">
                 <option value="5">5</option>
                 <option value="10">10</option>
-                <option value="15">15</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
               </select>
             </div>
           </div>
         </nav>
       </section>
-
-      <!-- ARCHIVE MODAL -->
-      <div id="archive-modal" class="modal">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3 id="archive-modal-title">Confirm Archive</h3>
-          </div>
-          <div class="modal-body">
-            <p id="archive-modal-description">
-              Are you sure you want to archive NCR
-              <strong id="archive-ncr-number"></strong>?
-            </p>
-            <p class="modal-warning">
-              You can restore the NCR from the archive within 90 days of deletion.
-            </p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" id="cancel-archive" class="btn btn-secondary">Cancel</button>
-            <button type="button" id="confirm-archive" class="btn btn-danger">Archive</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- UNARCHIVE MODAL -->
-      <div id="unarchive-modal" class="modal">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3 id="unarchive-modal-title">Confirm Un-archive</h3>
-          </div>
-          <div class="modal-body">
-            <p>
-              Are you sure you want to un-archive NCR
-              <strong id="unarchive-ncr-number"></strong>?
-            </p>
-            <p class="modal-warning">
-              This will make the NCR editable again.
-            </p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" id="cancel-unarchive" class="btn btn-secondary">Cancel</button>
-            <button type="button" id="confirm-unarchive" class="btn btn-primary">Un-archive</button>
-          </div>
-        </div>
-      </div>
 
       <!-- PDF VIEW MODAL -->
       <div id="pdf-view-overlay" class="pdf-view-overlay">

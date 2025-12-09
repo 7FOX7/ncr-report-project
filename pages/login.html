@@ -23,7 +23,7 @@
 
         <nav role="navigation" aria-label="Main navigation" class="nav">
           <ul>
-            <li><a href="index.html">Home</a></li>
+            <li id="home-nav-item"><a href="index.html">Home</a></li>
             <li><a href="about.html">About</a></li>
             <!-- This text will be switched to "Logout" by credentials.js when logged in -->
             <li><a href="login.html" aria-current="page" id="login-nav-link">Login</a></li>
@@ -34,7 +34,6 @@
 
     <nav aria-label="Breadcrumb" class="breadcrumb">
       <ol>
-        <li><a href="index.html">Home</a></li>
         <li><span aria-current="page">Login</span></li>
       </ol>
     </nav>
@@ -45,9 +44,6 @@
       <!-- DEMO QUICK-LOGIN BUTTONS -->
       <!-- These are for your project demo – they set the role directly in localStorage -->
       <div class="login-demo-buttons" style="margin-bottom: 1.5rem;">
-        <p style="margin-bottom: 0.75rem;">
-          For demo purposes, you can log in directly as a specific role:
-        </p>
         <button class="btn btn-primary login-demo-btn" data-role="Quality Inspector" type="button">
           [DEMO] Login as Quality Inspector
         </button>
@@ -62,9 +58,8 @@
       <!-- NORMAL LOGIN SECTION (username + password) -->
       <section class="login-content" aria-labelledby="login-heading">
         <div class="about-message">
-          <p id="login-description" style="margin-bottom: 1rem;">
-            Please enter your username and password to log in.  
-            (For now, this just maps to one of the NCR roles.)
+          <p hidden id="login-description" style="margin-bottom: 1rem;">
+            Please enter your username and password to log in.
           </p>
 
           <form id="login-form" aria-describedby="login-description">

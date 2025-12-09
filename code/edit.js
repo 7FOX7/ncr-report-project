@@ -492,10 +492,10 @@ function readEngineeringFromForm() {
 }
 
 function writeEngineeringToForm(eng) {
-  if (!eng) return;
+  if (!eng) eng = {};
   const set = (id, v) => {
     const el = document.getElementById(id);
-    if (el != null) el.value = v ?? el.value;
+    if (el != null) el.value = v ?? "";
   };
   const setCk = (id, v) => {
     const el = document.getElementById(id);
@@ -507,7 +507,7 @@ function writeEngineeringToForm(eng) {
   setCk("eng-rework", eng.rework);
   setCk("eng-scrap", eng.scrap);
   setCk("eng-custNotif", eng.custNotifNCR);
-  set("eng-disposition", eng.disposition);
+  set("eng-disposition", eng.disposition ?? "");
   setCk("eng-drawingReqUpd", eng.drawingReqUpd);
   set("eng-origRevNum", eng.origRevNum ?? "");
   set("eng-nameOfEng", eng.nameOfEng ?? "");
@@ -537,7 +537,7 @@ function readPurchasingFromForm() {
 }
 
 function writePurchasingToForm(purch) {
-  if (!purch) return;
+  if (!purch) purch = {};
   const set = (id, v) => {
     const el = document.getElementById(id);
     if (el) el.value = v ?? "";
@@ -576,7 +576,7 @@ function readFinalInspectionFromForm() {
 }
 
 function writeFinalInspectionToForm(fin) {
-  if (!fin) return;
+  if (!fin) fin = {};
   const set = (id, v) => {
     const el = document.getElementById(id);
     if (el) el.value = v ?? "";
@@ -712,8 +712,16 @@ function getWorkflowInfo(details) {
   const purchasingDone = !!details.purchasingCompleted;
   const finalQualityDone = !!details.finalQualityCompleted;
   const fullyCompleted = !!details.isCompleted;
+  const ncrClosed = details.finalInspection?.ncrClosed;
 
   if (fullyCompleted || (qualityInitialDone && engineeringDone && purchasingDone && finalQualityDone)) {
+    // If NCR Closed is explicitly set to "no", mark as "closed" instead of "completed"
+    if (ncrClosed === "no") {
+      return {
+        label: "Closed",
+        stage: "closed",
+      };
+    }
     return {
       label: "Completed",
       stage: "completed",
@@ -748,6 +756,43 @@ function getWorkflowInfo(details) {
 }
 
 /* ---------------------- (OLD) merge / visibility helpers ---------------------- */
+
+// Function to automatically open the accordion for the current workflow stage
+function openAccordionForWorkflowStage(stage) {
+  let toggleId = null;
+
+  switch (stage) {
+    case "quality-initial":
+      // Initial quality stage uses the merged header accordion
+      toggleId = "header-toggle";
+      break;
+    case "quality-final":
+      // Final quality stage opens the final inspection accordion
+      toggleId = "final-inspection-toggle";
+      break;
+    case "engineering":
+      toggleId = "engineering-toggle";
+      break;
+    case "purchasing":
+      toggleId = "purchasing-toggle";
+      break;
+    case "completed":
+    case "closed":
+      // For completed or closed, open the final inspection accordion
+      toggleId = "final-inspection-toggle";
+      break;
+    default:
+      // Default to header if stage is unknown
+      toggleId = "header-toggle";
+  }
+
+  if (toggleId) {
+    const toggle = document.getElementById(toggleId);
+    if (toggle) {
+      toggle.checked = true;
+    }
+  }
+}
 
 // Simplified version: ALWAYS merge Quality inspector sections into one accordion
 function mergeQualityInspectorAccordions() {
@@ -896,59 +941,76 @@ function applyRoleVisibility(details) {
   const isE = isEngineerRole();
   const isP = isPurchasingRole();
 
+  // Check which sections are completed
+  const qualityInitialCompleted = details?.qualityInitialCompleted || details?.qualityCompleted || false;
+  const engineeringCompleted = details?.engineeringCompleted || false;
+  const purchasingCompleted = details?.purchasingCompleted || false;
+  const finalQualityCompleted = details?.finalQualityCompleted || false;
+
   if (isQ) {
     const canSeeFinal = isPurchasingStepCompleted(details);
 
     if (currentStage === "quality-final") {
-      // Close-out stage: Quality should see ONLY their own sections:
-      // - Quality Inspector (merged) as read-only
-      // - Final Re-Inspection & Closure as editable
+      // Close-out stage: Show completed sections as read-only, final section editable
       setFieldsetVisible(headerFieldset, true);
       setFieldsetVisible(lineFieldset, false);
       setFieldsetVisible(attachmentFieldset, false);
-
-      // Hide Engineering & Purchasing when in close-out
-      setFieldsetVisible(engFieldset, false);
-      setFieldsetVisible(purchFieldset, false);
-
-      // Show final close-out section once Purchasing is done
-      setFieldsetVisible(finalFieldset, canSeeFinal);
-
-      // Make the first Quality section read-only
       setFieldsetReadOnly(headerFieldset, true);
+
+      // Show engineering and purchasing only if completed
+      setFieldsetVisible(engFieldset, engineeringCompleted);
+      if (engineeringCompleted) setFieldsetReadOnly(engFieldset, true);
+
+      setFieldsetVisible(purchFieldset, purchasingCompleted);
+      if (purchasingCompleted) setFieldsetReadOnly(purchFieldset, true);
+
+      setFieldsetVisible(finalFieldset, canSeeFinal);
     } else {
       // Initial Quality stage: only the Quality accordion is editable
       setFieldsetVisible(headerFieldset, true);
       setFieldsetVisible(lineFieldset, false);
       setFieldsetVisible(attachmentFieldset, false);
 
+      // Hide other sections since they're not completed yet
       setFieldsetVisible(engFieldset, false);
       setFieldsetVisible(purchFieldset, false);
-      setFieldsetVisible(finalFieldset, canSeeFinal);
+      setFieldsetVisible(finalFieldset, false);
     }
     return;
   }
 
   if (isE) {
-    // Engineering sees only engineering fieldset
-    setFieldsetVisible(headerFieldset, false);
+    // Engineering: show their section editable, show completed previous sections as read-only
+    setFieldsetVisible(headerFieldset, qualityInitialCompleted);
+    if (qualityInitialCompleted) setFieldsetReadOnly(headerFieldset, true);
+    
     setFieldsetVisible(lineFieldset, false);
     setFieldsetVisible(attachmentFieldset, false);
 
+    // Their section is editable
     setFieldsetVisible(engFieldset, true);
+
+    // Hide future sections
     setFieldsetVisible(purchFieldset, false);
     setFieldsetVisible(finalFieldset, false);
     return;
   }
 
   if (isP) {
-    // Purchasing / Operations sees only their own section
-    setFieldsetVisible(headerFieldset, false);
+    // Purchasing: show completed previous sections as read-only, their section editable
+    setFieldsetVisible(headerFieldset, qualityInitialCompleted);
+    if (qualityInitialCompleted) setFieldsetReadOnly(headerFieldset, true);
+
     setFieldsetVisible(lineFieldset, false);
     setFieldsetVisible(attachmentFieldset, false);
 
-    setFieldsetVisible(engFieldset, false);
+    setFieldsetVisible(engFieldset, engineeringCompleted);
+    if (engineeringCompleted) setFieldsetReadOnly(engFieldset, true);
+
+    // Their section is editable
     setFieldsetVisible(purchFieldset, true);
+
+    // Hide final section
     setFieldsetVisible(finalFieldset, false);
     return;
   }
@@ -1155,16 +1217,25 @@ function fillFormFrom(details, row) {
     inpCreated.value = details?.dateCreated || row?.dateCreated || urlCreated || todayISO();
   }
 
+  // Clear and reset engineering section
   if (details && details.engineering) {
     writeEngineeringToForm(details.engineering);
+  } else {
+    writeEngineeringToForm({});
   }
 
+  // Clear and reset purchasing section
   if (details && details.purchasing) {
     writePurchasingToForm(details.purchasing);
+  } else {
+    writePurchasingToForm({});
   }
 
+  // Clear and reset final inspection section
   if (details && details.finalInspection) {
     writeFinalInspectionToForm(details.finalInspection);
+  } else {
+    writeFinalInspectionToForm({});
   }
 
   if (selSupplier) {
@@ -1173,7 +1244,9 @@ function fillFormFrom(details, row) {
   }
 
   const setVal = (el, v) => {
-    if (el && v != null && v !== "") el.value = v;
+    if (el) {
+      el.value = (v != null && v !== "") ? v : "";
+    }
   };
 
   if (details) {
@@ -1191,10 +1264,29 @@ function fillFormFrom(details, row) {
 
     if (details.itemNonconforming) {
       setCheckboxValues("item-nonconforming", details.itemNonconforming);
+    } else {
+      setCheckboxValues("item-nonconforming", []);
     }
     if (details.processApplicable) {
       setCheckboxValues("process-applicable", details.processApplicable);
+    } else {
+      setCheckboxValues("process-applicable", []);
     }
+  } else {
+    // Clear all quality initial fields if no details
+    setVal(inpPONum, "");
+    setVal(inpSONum, "");
+    setVal(selProcessType, "");
+    setVal(selProduct, "");
+    setVal(inpRecvQty, "");
+    setVal(inpDefectQty, "");
+    setVal(selIssue, "");
+    setVal(inpDefectDesc, "");
+    setVal(inpInspector, "");
+    setVal(inpInspectedOn, "");
+    setVal(selStatus, "");
+    setCheckboxValues("item-nonconforming", []);
+    setCheckboxValues("process-applicable", []);
   }
 
   updateDocumentSummary();
@@ -1246,6 +1338,9 @@ document.addEventListener("DOMContentLoaded", () => {
   mergeQualityInspectorAccordions();
 
   applyRoleVisibility(details);
+
+  // Automatically open the accordion for the current workflow stage
+  openAccordionForWorkflowStage(currentStage);
 
   if (form) form.addEventListener("submit", (e) => onUpdateSubmit(e, false));
 

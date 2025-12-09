@@ -2,14 +2,31 @@
 // Seed data (fallback only)
 // ========================
 let ncrData = (window.ncrData && Array.isArray(window.ncrData)) ? window.ncrData : [
-  { id: 1, ncrNumber: "2025-611", dateCreated: "2025-10-01", lastModified: "2025-10-05", supplier: "BlueHaven Distributors" },
-  { id: 2, ncrNumber: "2025-325", dateCreated: "2025-10-02", lastModified: "2025-10-06", supplier: "Apex Global Trading" },
-  { id: 3, ncrNumber: "2025-242", dateCreated: "2025-10-01", lastModified: "2025-10-11", supplier: "SilverOak Importers" }
-];
-
-let ncrArchivedData = (window.ncrArchivedData && Array.isArray(window.ncrArchivedData)) ? window.ncrArchivedData : [
-  { id: 6, ncrNumber: "2025-623", dateCreated: "2025-10-05", lastModified: "2025-10-13", supplier: "SilverOak Importers" },
-  { id: 7, ncrNumber: "2025-845", dateCreated: "2025-10-02", lastModified: "2025-10-07", supplier: "BlueHaven Distributors" }
+  { id: 1, ncrNumber: "2025-001", dateCreated: "2025-11-01", lastModified: "2025-11-01", supplier: "Apex Manufacturing" },
+  { id: 2, ncrNumber: "2025-002", dateCreated: "2025-11-02", lastModified: "2025-11-03", supplier: "TechCore Industries" },
+  { id: 3, ncrNumber: "2025-003", dateCreated: "2025-11-03", lastModified: "2025-11-05", supplier: "BlueHaven Distributors" },
+  { id: 4, ncrNumber: "2025-004", dateCreated: "2025-11-04", lastModified: "2025-11-08", supplier: "SilverOak Importers" },
+  { id: 5, ncrNumber: "2025-005", dateCreated: "2025-11-05", lastModified: "2025-11-10", supplier: "Global Tech Solutions" },
+  { id: 6, ncrNumber: "2025-006", dateCreated: "2025-11-06", lastModified: "2025-11-12", supplier: "Precision Parts Co" },
+  { id: 7, ncrNumber: "2025-007", dateCreated: "2025-11-07", lastModified: "2025-11-14", supplier: "Northern Supply Chain" },
+  { id: 8, ncrNumber: "2025-008", dateCreated: "2025-11-08", lastModified: "2025-11-15", supplier: "Eastern Electronics" },
+  { id: 9, ncrNumber: "2025-009", dateCreated: "2025-11-09", lastModified: "2025-11-16", supplier: "Western Components" },
+  { id: 10, ncrNumber: "2025-010", dateCreated: "2025-11-10", lastModified: "2025-11-18", supplier: "Metro Manufacturing" },
+  { id: 11, ncrNumber: "2025-011", dateCreated: "2025-11-11", lastModified: "2025-11-20", supplier: "Alpha Industries" },
+  { id: 12, ncrNumber: "2025-012", dateCreated: "2025-11-12", lastModified: "2025-11-21", supplier: "Beta Systems" },
+  { id: 13, ncrNumber: "2025-013", dateCreated: "2025-11-13", lastModified: "2025-11-22", supplier: "Gamma Technologies" },
+  { id: 14, ncrNumber: "2025-014", dateCreated: "2025-11-14", lastModified: "2025-11-23", supplier: "Delta Supplies" },
+  { id: 15, ncrNumber: "2025-015", dateCreated: "2025-11-15", lastModified: "2025-11-24", supplier: "Epsilon Trading" },
+  { id: 16, ncrNumber: "2025-016", dateCreated: "2025-11-16", lastModified: "2025-11-25", supplier: "Zeta Corporation" },
+  { id: 17, ncrNumber: "2025-017", dateCreated: "2025-11-17", lastModified: "2025-11-26", supplier: "Theta Manufacturing" },
+  { id: 18, ncrNumber: "2025-018", dateCreated: "2025-11-18", lastModified: "2025-11-27", supplier: "Iota Components" },
+  { id: 19, ncrNumber: "2025-019", dateCreated: "2025-11-19", lastModified: "2025-11-28", supplier: "Kappa Industries" },
+  { id: 20, ncrNumber: "2025-020", dateCreated: "2025-11-20", lastModified: "2025-11-29", supplier: "Lambda Distributors" },
+  { id: 21, ncrNumber: "2025-021", dateCreated: "2025-11-21", lastModified: "2025-11-30", supplier: "Omega Supplies" },
+  { id: 22, ncrNumber: "2025-022", dateCreated: "2025-11-22", lastModified: "2025-12-01", supplier: "Sigma Electronics" },
+  { id: 23, ncrNumber: "2025-023", dateCreated: "2025-11-23", lastModified: "2025-12-02", supplier: "Phoenix Manufacturing" },
+  { id: 24, ncrNumber: "2025-024", dateCreated: "2025-11-24", lastModified: "2025-12-03", supplier: "Titan Industries" },
+  { id: 25, ncrNumber: "2025-025", dateCreated: "2025-11-25", lastModified: "2025-12-04", supplier: "Atlas Components" }
 ];
 
 let ncrFilteredData = ncrData.slice();
@@ -116,9 +133,17 @@ function getWorkflowInfo(details) {
   const purchasingDone    = !!details.purchasingCompleted;
   const finalQualityDone  = !!details.finalQualityCompleted;
   const fullyCompleted    = !!details.isCompleted;
+  const ncrClosed         = details.finalInspection?.ncrClosed;
 
-  // FINAL COMPLETED
+  // FINAL COMPLETED OR CLOSED
   if (fullyCompleted || (qualityInitialDone && engineeringDone && purchasingDone && finalQualityDone)) {
+    // If NCR Closed is explicitly set to "no", mark as "closed" instead of "completed"
+    if (ncrClosed === "no") {
+      return {
+        stage: "closed",
+        label: "Closed"
+      };
+    }
     return {
       stage: "completed",
       label: "Completed"
@@ -230,7 +255,8 @@ function renderNCRTable(page = 1) {
 
     const workflowInfo = getWorkflowInfo(d);
     const completedFlag = d?.isCompleted || ncr.isCompleted || false;
-    const isCompleted = completedFlag || workflowInfo.stage === "completed";
+    const isCompleted = completedFlag || workflowInfo.stage === "completed" || workflowInfo.stage === "closed";
+    const isClosed = workflowInfo.stage === "closed";
 
     const row = document.createElement("tr");
     row.dataset.ncrId = ncr.id;
@@ -241,9 +267,6 @@ function renderNCRTable(page = 1) {
 
     // --------- Actions column ----------
     let actionsHtml = "";
-    const isArchived =
-      (ncr.archived === true) ||
-      ncrArchivedData.some(a => a.id === ncr.id);
 
     const userCredentials = getUserCredentials();
     const isUserLoggedIn =
@@ -252,7 +275,7 @@ function renderNCRTable(page = 1) {
     if (isUserLoggedIn) {
       const userCanEdit = canUserEdit(workflowInfo.stage);
 
-      if (!isCompleted && !isArchived) {
+      if (!isCompleted) {
         if (userCanEdit) {
           // Current stage owner gets Edit
           actionsHtml = `
@@ -272,25 +295,6 @@ function renderNCRTable(page = 1) {
           </button>
         `;
         }
-
-        // Archive is allowed for any logged-in user while active
-        actionsHtml += `
-          <button type="button" class="btn btn-outline"
-            aria-label="Archive ${ncr.ncrNumber}"
-            onclick="showArchiveConfirmation(${ncr.id}, '${ncr.ncrNumber}')">
-            Archive
-          </button>
-        `;
-      }
-
-      if (isArchived) {
-        actionsHtml += `
-        <button type="button" class="btn btn-secondary"
-          aria-label="Un-archive ${ncr.ncrNumber}"
-          onclick="showUnarchiveConfirmation(${ncr.id}, '${ncr.ncrNumber}')">
-          Un-archive
-        </button>
-      `;
       }
 
       if (isCompleted) {
@@ -311,7 +315,7 @@ function renderNCRTable(page = 1) {
     row.innerHTML = `
       <td data-label="NCR Number">
         ${ncr.ncrNumber}
-        ${isCompleted ? '<span class="completion-badge">COMPLETED</span>' : ""}
+        ${isClosed ? '<span class="completion-badge closed-badge">CLOSED</span>' : isCompleted ? '<span class="completion-badge">COMPLETED</span>' : ""}
       </td>
       <td data-label="Date Created">${dateCreated}</td>
       <td data-label="Last Modified">${lastModified}</td>
@@ -330,82 +334,6 @@ function renderNCRTable(page = 1) {
   }
   if (typeof setupPaginationControls === "function") {
     setupPaginationControls();
-  }
-}
-
-// ========================
-// Archive / Unarchive
-// ========================
-function showArchiveConfirmation(ncrId, ncrNumber) {
-  const modal = document.getElementById("archive-modal");
-  const ncrNumberSpan = document.getElementById("archive-ncr-number");
-  const confirmButton = document.getElementById("confirm-archive");
-  if (ncrNumberSpan) ncrNumberSpan.textContent = ncrNumber;
-  if (confirmButton) confirmButton.onclick = () => archiveNCR(ncrId);
-  if (modal) {
-    modal.style.display = "block";
-    modal.setAttribute("aria-hidden", "false");
-  }
-  const cancelBtn = document.getElementById("cancel-archive");
-  if (cancelBtn) cancelBtn.focus();
-}
-
-function closeArchiveModal() {
-  const modal = document.getElementById("archive-modal");
-  if (modal) {
-    modal.style.display = "none";
-    modal.setAttribute("aria-hidden", "true");
-  }
-}
-
-function archiveNCR(ncrId) {
-  const idx = ncrData.findIndex(r => r.id === ncrId);
-  if (idx >= 0) {
-    const rec = ncrData.splice(idx, 1)[0];
-    ncrArchivedData.push(rec);
-  }
-  closeArchiveModal();
-  filterNCRData(1);
-}
-
-function unarchiveNCR(ncrId) {
-  const idx = ncrArchivedData.findIndex(r => r.id === ncrId);
-  if (idx >= 0) {
-    const rec = ncrArchivedData.splice(idx, 1)[0];
-    ncrData.push(rec);
-  }
-  closeUnarchiveModal();
-
-  let currentPage = 1;
-  if (typeof getCurrentPage === "function") {
-    try {
-      currentPage = getCurrentPage();
-    } catch {
-      currentPage = 1;
-    }
-  }
-  filterNCRData(currentPage);
-}
-
-function showUnarchiveConfirmation(ncrId, ncrNumber) {
-  const modal = document.getElementById("unarchive-modal");
-  const span = document.getElementById("unarchive-ncr-number");
-  const confirmButton = document.getElementById("confirm-unarchive");
-  if (span) span.textContent = ncrNumber;
-  if (confirmButton) confirmButton.onclick = () => unarchiveNCR(ncrId);
-  if (modal) {
-    modal.style.display = "block";
-    modal.setAttribute("aria-hidden", "false");
-  }
-  const cancelBtn = document.getElementById("cancel-unarchive");
-  if (cancelBtn) cancelBtn.focus();
-}
-
-function closeUnarchiveModal() {
-  const modal = document.getElementById("unarchive-modal");
-  if (modal) {
-    modal.style.display = "none";
-    modal.setAttribute("aria-hidden", "true");
   }
 }
 
@@ -823,8 +751,7 @@ function downloadPDF(ncrNumber) {
   const content = document.getElementById("pdf-view-content");
   if (!overlay || !content) return;
 
-  const allRows = [...ncrData, ...ncrArchivedData];
-  const summaryRow = allRows.find(r => r.ncrNumber === ncrNumber) || null;
+  const summaryRow = ncrData.find(r => r.ncrNumber === ncrNumber) || null;
 
   content.innerHTML = buildPdfPreviewHtml(details, summaryRow);
   overlay.classList.add("active");
@@ -860,15 +787,7 @@ function getWorkflowFilterValue() {
 }
 
 function getActiveDataset() {
-  const status = document.querySelector('input[name="ncr-active"]:checked')?.value;
-  if (status === "archived") {
-    return ncrArchivedData.map(r => Object.assign({}, r, { archived: true }));
-  }
-  if (status === "all") {
-    return ncrData.map(r => Object.assign({}, r, { archived: false }))
-      .concat(ncrArchivedData.map(r => Object.assign({}, r, { archived: true })));
-  }
-  return ncrData.map(r => Object.assign({}, r, { archived: false }));
+  return ncrData.slice();
 }
 
 function filterNCRData(page = 1) {
@@ -876,6 +795,17 @@ function filterNCRData(page = 1) {
   const workflowFilter = getWorkflowFilterValue(); // "", "completed", "quality", "engineering", "purchasing"
   const activeSet = getActiveDataset();
   const detailsMap = getDetailsMap();
+
+  // Get current user's role to auto-filter by their workflow stage
+  const userCredentials = getUserCredentials();
+  const userRole = userCredentials?.type;
+  const isLoggedIn = userRole && userRole !== "loggedOut";
+
+  // Check if "Show completed records" and "Show closed records" are checked
+  const showCompletedCheckbox = document.getElementById("show-completed");
+  const showCompleted = showCompletedCheckbox ? showCompletedCheckbox.checked : false;
+  const showClosedCheckbox = document.getElementById("show-closed");
+  const showClosed = showClosedCheckbox ? showClosedCheckbox.checked : false;
 
   ncrFilteredData = activeSet.filter(r => {
     const details = detailsMap[r.ncrNumber];
@@ -890,6 +820,36 @@ function filterNCRData(page = 1) {
 
     if (!matchesSupplier) return false;
 
+    // Check if record is completed or closed (mutually exclusive)
+    const isCompleted = wfInfo.stage === "completed";
+    const isClosed = wfInfo.stage === "closed";
+
+    // If user is logged in, filter by their workflow stage
+    if (isLoggedIn) {
+      let userCanSeeRecord = false;
+
+      if (userRole === "Quality Inspector") {
+        userCanSeeRecord = wfInfo.stage === "quality-initial" || wfInfo.stage === "quality-final";
+      } else if (userRole === "Engineer") {
+        userCanSeeRecord = wfInfo.stage === "engineering";
+      } else if (userRole && String(userRole).toLowerCase().includes("purchasing")) {
+        userCanSeeRecord = wfInfo.stage === "purchasing";
+      }
+
+      // Allow completed records if checkbox is checked
+      const canShowCompleted = isCompleted && showCompleted;
+      // Allow closed records if checkbox is checked
+      const canShowClosed = isClosed && showClosed;
+
+      // Show if: matches workflow stage OR (is completed and checkbox checked) OR (is closed and checkbox checked)
+      if (!userCanSeeRecord && !canShowCompleted && !canShowClosed) return false;
+    } else {
+      // For non-logged-in users, apply checkbox filters
+      if (isCompleted && !showCompleted) return false;
+      if (isClosed && !showClosed) return false;
+    }
+
+    // Apply the manual workflow filter (dropdown) if set
     if (!workflowFilter) return true; // all stages
 
     if (workflowFilter === "quality") {
@@ -909,10 +869,24 @@ function filterNCRData(page = 1) {
     return { dateCreated, lastModified };
   };
 
+  // Sort: incomplete records first (by date), then completed/closed records (by date)
   ncrFilteredData.sort((a, b) => {
     const da = getDatesFor(a);
     const db = getDatesFor(b);
 
+    const detailsA = detailsMap[a.ncrNumber];
+    const detailsB = detailsMap[b.ncrNumber];
+    const wfInfoA = getWorkflowInfo(detailsA);
+    const wfInfoB = getWorkflowInfo(detailsB);
+
+    const isCompletedOrClosedA = wfInfoA.stage === "completed" || wfInfoA.stage === "closed";
+    const isCompletedOrClosedB = wfInfoB.stage === "completed" || wfInfoB.stage === "closed";
+
+    // If one is incomplete and the other is completed/closed, incomplete comes first
+    if (isCompletedOrClosedA && !isCompletedOrClosedB) return 1;
+    if (!isCompletedOrClosedA && isCompletedOrClosedB) return -1;
+
+    // Within the same group (both incomplete or both completed/closed), sort by date
     const tCreatedA = da.dateCreated ? Date.parse(da.dateCreated) : 0;
     const tCreatedB = db.dateCreated ? Date.parse(db.dateCreated) : 0;
 
@@ -938,13 +912,36 @@ function populateSupplierDropdown() {
   const dropdown = document.querySelector("#ncr-search");
   if (!dropdown) return;
 
-  const allData = [...ncrData, ...ncrArchivedData];
   const detailsMap = getDetailsMap();
   const suppliersSet = new Set();
 
-  allData.forEach(r => {
+  // Get current user's role to filter suppliers
+  const userCredentials = getUserCredentials();
+  const userRole = userCredentials?.type;
+  const isLoggedIn = userRole && userRole !== "loggedOut";
+
+  ncrData.forEach(r => {
+    const details = detailsMap[r.ncrNumber];
+    const wfInfo = getWorkflowInfo(details);
+
+    // If user is logged in, only include suppliers from records at their workflow stage
+    if (isLoggedIn) {
+      let includeThisRecord = false;
+
+      if (userRole === "Quality Inspector") {
+        includeThisRecord = wfInfo.stage === "quality-initial" || wfInfo.stage === "quality-final";
+      } else if (userRole === "Engineer") {
+        includeThisRecord = wfInfo.stage === "engineering";
+      } else if (userRole && String(userRole).toLowerCase().includes("purchasing")) {
+        includeThisRecord = wfInfo.stage === "purchasing";
+      }
+
+      if (!includeThisRecord) return; // Skip this record
+    }
+
+    // Add supplier names from records that match the filter
     const baseName = (r.supplier || "").trim();
-    const detailsName = (detailsMap[r.ncrNumber]?.supplierName || "").trim();
+    const detailsName = (details?.supplierName || "").trim();
     if (baseName) suppliersSet.add(baseName);
     if (detailsName && detailsName !== baseName) suppliersSet.add(detailsName);
   });
@@ -970,32 +967,28 @@ function setupFilterEventListener() {
     workflowSel.addEventListener("change", () => filterNCRData(1));
   }
 
-  document.querySelectorAll('input[name="ncr-active"]').forEach(r => {
-    r.addEventListener("change", () => filterNCRData(1));
-  });
-
   const amountSel = document.getElementById("search-amount");
   if (amountSel) {
     amountSel.addEventListener("change", () => filterNCRData(1));
   }
+
+  const showCompletedCheckbox = document.getElementById("show-completed");
+  if (showCompletedCheckbox) {
+    showCompletedCheckbox.addEventListener("change", () => filterNCRData(1));
+  }
+
+  const showClosedCheckbox = document.getElementById("show-closed");
+  if (showClosedCheckbox) {
+    showClosedCheckbox.addEventListener("change", () => filterNCRData(1));
+  }
 }
 
 function setupModalEventListeners() {
-  const cancelArchive = document.getElementById("cancel-archive");
-  if (cancelArchive) cancelArchive.addEventListener("click", closeArchiveModal);
-
-  const cancelUnarchive = document.getElementById("cancel-unarchive");
-  if (cancelUnarchive) cancelUnarchive.addEventListener("click", closeUnarchiveModal);
-
   const closePDFButton = document.getElementById("close-pdf-view");
   if (closePDFButton) closePDFButton.addEventListener("click", closePDFView);
 
   window.addEventListener("click", (e) => {
-    const archiveModal = document.getElementById("archive-modal");
-    const unarchiveModal = document.getElementById("unarchive-modal");
     const pdfViewOverlay = document.getElementById("pdf-view-overlay");
-    if (e.target === archiveModal) closeArchiveModal();
-    if (e.target === unarchiveModal) closeUnarchiveModal();
     if (e.target === pdfViewOverlay) closePDFView();
   });
 }
@@ -1004,12 +997,6 @@ function setupModalEventListeners() {
 // Init
 // ========================
 document.addEventListener("DOMContentLoaded", function () {
-  const checked = document.querySelector('input[name="ncr-active"]:checked');
-  if (!checked) {
-    const r = document.querySelector('input[name="ncr-active"][value="active"]');
-    if (r) r.checked = true;
-  }
-
   mergeIncomingRecords();
   applyEdits();
 
