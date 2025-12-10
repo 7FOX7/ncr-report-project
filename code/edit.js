@@ -3,7 +3,11 @@ const STORAGE_KEY = "ncrData";
 const DETAILS_KEY = "ncrDetails";
 
 function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 // Global workflow + role
@@ -715,8 +719,8 @@ function getWorkflowInfo(details) {
   const ncrClosed = details.finalInspection?.ncrClosed;
 
   if (fullyCompleted || (qualityInitialDone && engineeringDone && purchasingDone && finalQualityDone)) {
-    // If NCR Closed is explicitly set to "no", mark as "closed" instead of "completed"
-    if (ncrClosed === "no") {
+    // If NCR Closed is explicitly set to "yes", mark as "closed", otherwise "completed"
+    if (ncrClosed === "yes") {
       return {
         label: "Closed",
         stage: "closed",
@@ -1770,7 +1774,9 @@ function validateAndShowPreview() {
       message: "Please select the inspection date.",
     });
   } else {
-    const picked = new Date(inspectedOn);
+    // Parse date strings in local time for proper comparison
+    const pickedParts = inspectedOn.split('-');
+    const picked = new Date(parseInt(pickedParts[0]), parseInt(pickedParts[1]) - 1, parseInt(pickedParts[2]));
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     if (picked > today) {
@@ -2058,7 +2064,9 @@ function performUpdate(isCompleted = false, stayHere = false) {
       showValidationError("inspected-on", "Please select the inspection date.");
       return;
     }
-    const picked = new Date(inspectedOn);
+    // Parse date strings in local time for proper comparison
+    const pickedParts = inspectedOn.split('-');
+    const picked = new Date(parseInt(pickedParts[0]), parseInt(pickedParts[1]) - 1, parseInt(pickedParts[2]));
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     if (picked > today) {

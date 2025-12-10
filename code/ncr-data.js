@@ -137,8 +137,8 @@ function getWorkflowInfo(details) {
 
   // FINAL COMPLETED OR CLOSED
   if (fullyCompleted || (qualityInitialDone && engineeringDone && purchasingDone && finalQualityDone)) {
-    // If NCR Closed is explicitly set to "no", mark as "closed" instead of "completed"
-    if (ncrClosed === "no") {
+    // If NCR Closed is explicitly set to "yes", mark as "closed", otherwise "completed"
+    if (ncrClosed === "yes") {
       return {
         stage: "closed",
         label: "Closed"
@@ -801,11 +801,15 @@ function filterNCRData(page = 1) {
   const userRole = userCredentials?.type;
   const isLoggedIn = userRole && userRole !== "loggedOut";
 
-  // Check if "Show completed records" and "Show closed records" are checked
-  const showCompletedCheckbox = document.getElementById("show-completed");
-  const showCompleted = showCompletedCheckbox ? showCompletedCheckbox.checked : false;
-  const showClosedCheckbox = document.getElementById("show-closed");
-  const showClosed = showClosedCheckbox ? showClosedCheckbox.checked : false;
+  // Get selected radio button for record filter
+  const recordFilterRadios = document.getElementsByName("record-filter");
+  let recordFilter = "all"; // default
+  for (const radio of recordFilterRadios) {
+    if (radio.checked) {
+      recordFilter = radio.value; // "all", "active", "completed", or "closed"
+      break;
+    }
+  }
 
   ncrFilteredData = activeSet.filter(r => {
     const details = detailsMap[r.ncrNumber];
@@ -824,29 +828,48 @@ function filterNCRData(page = 1) {
     const isCompleted = wfInfo.stage === "completed";
     const isClosed = wfInfo.stage === "closed";
 
-    // If user is logged in, filter by their workflow stage
-    if (isLoggedIn) {
-      let userCanSeeRecord = false;
+    // Apply record filter based on selected radio button
+    if (recordFilter === "all") {
+      // Show user's workflow stage records plus completed and closed records
+      if (isLoggedIn) {
+        let userCanSeeRecord = false;
 
-      if (userRole === "Quality Inspector") {
-        userCanSeeRecord = wfInfo.stage === "quality-initial" || wfInfo.stage === "quality-final";
-      } else if (userRole === "Engineer") {
-        userCanSeeRecord = wfInfo.stage === "engineering";
-      } else if (userRole && String(userRole).toLowerCase().includes("purchasing")) {
-        userCanSeeRecord = wfInfo.stage === "purchasing";
+        // Check if it's the user's workflow stage
+        if (userRole === "Quality Inspector") {
+          userCanSeeRecord = wfInfo.stage === "quality-initial" || wfInfo.stage === "quality-final";
+        } else if (userRole === "Engineer") {
+          userCanSeeRecord = wfInfo.stage === "engineering";
+        } else if (userRole && String(userRole).toLowerCase().includes("purchasing")) {
+          userCanSeeRecord = wfInfo.stage === "purchasing";
+        }
+
+        // Allow if it's user's workflow stage OR if it's completed/closed
+        if (!userCanSeeRecord && !isCompleted && !isClosed) return false;
       }
+    } else if (recordFilter === "active") {
+      // Show only active records (not completed or closed)
+      if (isCompleted || isClosed) return false;
 
-      // Allow completed records if checkbox is checked
-      const canShowCompleted = isCompleted && showCompleted;
-      // Allow closed records if checkbox is checked
-      const canShowClosed = isClosed && showClosed;
+      // If user is logged in, only show their workflow stage
+      if (isLoggedIn) {
+        let userCanSeeRecord = false;
 
-      // Show if: matches workflow stage OR (is completed and checkbox checked) OR (is closed and checkbox checked)
-      if (!userCanSeeRecord && !canShowCompleted && !canShowClosed) return false;
-    } else {
-      // For non-logged-in users, apply checkbox filters
-      if (isCompleted && !showCompleted) return false;
-      if (isClosed && !showClosed) return false;
+        if (userRole === "Quality Inspector") {
+          userCanSeeRecord = wfInfo.stage === "quality-initial" || wfInfo.stage === "quality-final";
+        } else if (userRole === "Engineer") {
+          userCanSeeRecord = wfInfo.stage === "engineering";
+        } else if (userRole && String(userRole).toLowerCase().includes("purchasing")) {
+          userCanSeeRecord = wfInfo.stage === "purchasing";
+        }
+
+        if (!userCanSeeRecord) return false;
+      }
+    } else if (recordFilter === "completed") {
+      // Show only completed records
+      if (!isCompleted) return false;
+    } else if (recordFilter === "closed") {
+      // Show only closed records
+      if (!isClosed) return false;
     }
 
     // Apply the manual workflow filter (dropdown) if set
@@ -972,15 +995,11 @@ function setupFilterEventListener() {
     amountSel.addEventListener("change", () => filterNCRData(1));
   }
 
-  const showCompletedCheckbox = document.getElementById("show-completed");
-  if (showCompletedCheckbox) {
-    showCompletedCheckbox.addEventListener("change", () => filterNCRData(1));
-  }
-
-  const showClosedCheckbox = document.getElementById("show-closed");
-  if (showClosedCheckbox) {
-    showClosedCheckbox.addEventListener("change", () => filterNCRData(1));
-  }
+  // Add event listeners for radio buttons
+  const recordFilterRadios = document.getElementsByName("record-filter");
+  recordFilterRadios.forEach(radio => {
+    radio.addEventListener("change", () => filterNCRData(1));
+  });
 }
 
 function setupModalEventListeners() {

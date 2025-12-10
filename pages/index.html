@@ -66,19 +66,27 @@
 
               <div class="search-column">
                 <div class="search-row end-align">
-                  <input type="checkbox" id="show-completed" name="show-completed" value="show">
-                  <label for="show-completed" class="search-label">Show completed records</label>
+                  <input type="radio" id="show-active" name="record-filter" value="active" checked>
+                  <label for="show-active" class="search-label">Active records</label>
                 </div>
-                <p id="status-completed" class="status-help">
-                  Show completed NCR records
-                </p>
 
                 <div class="search-row end-align">
-                  <input type="checkbox" id="show-closed" name="show-closed" value="show">
-                  <label for="show-closed" class="search-label">Show closed records</label>
+                  <input type="radio" id="show-completed" name="record-filter" value="completed">
+                  <label for="show-completed" class="search-label">Completed records</label>
                 </div>
+
+                <div class="search-row end-align">
+                  <input type="radio" id="show-closed" name="record-filter" value="closed">
+                  <label for="show-closed" class="search-label">Closed records</label>
+                </div>
+
+                <div class="search-row end-align">
+                  <input type="radio" id="show-all" name="record-filter" value="all">
+                  <label for="show-all" class="search-label">All records</label>
+                </div>
+
                 <p id="status-closed" class="status-help">
-                  Show closed NCR records
+                  Display Active, Completed, Closed, or All NCR records
                 </p>
               </div>
 
