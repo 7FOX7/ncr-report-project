@@ -1,4 +1,24 @@
 // ========================
+// Helper functions
+// ========================
+function formatDateTime(isoDateTime) {
+  if (!isoDateTime) return "";
+  
+  // If it's just a date (YYYY-MM-DD), return as-is
+  if (!isoDateTime.includes('T')) return isoDateTime;
+  
+  // Parse ISO datetime string and format it as date only
+  const dt = new Date(isoDateTime);
+  if (isNaN(dt.getTime())) return isoDateTime; // Return original if invalid
+  
+  const year = dt.getFullYear();
+  const month = String(dt.getMonth() + 1).padStart(2, '0');
+  const day = String(dt.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+}
+
+// ========================
 // Seed data (fallback only)
 // ========================
 let ncrData = (window.ncrData && Array.isArray(window.ncrData)) ? window.ncrData : [
@@ -318,7 +338,7 @@ function renderNCRTable(page = 1) {
         ${isClosed ? '<span class="completion-badge closed-badge">CLOSED</span>' : isCompleted ? '<span class="completion-badge">COMPLETED</span>' : ""}
       </td>
       <td data-label="Date Created">${dateCreated}</td>
-      <td data-label="Last Modified">${lastModified}</td>
+      <td data-label="Last Modified">${formatDateTime(lastModified)}</td>
       <td data-label="Supplier">${supplier}</td>
       <td data-label="Workflow Stage">${workflowInfo.label}</td>
       <td data-label="Actions">${actionsHtml}</td>

@@ -11,6 +11,16 @@ function todayISO() {
   const day = String(now.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
+function nowISODateTime() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+}
 // Parse  input type="date" value as a *local* date 
 function parseLocalDate(yyyyMmDd) {
   if (!yyyyMmDd) return null;
@@ -642,7 +652,7 @@ document.addEventListener("DOMContentLoaded", () => {
       //persist BOTH the table row  and the full details 
       const ncrInput = document.getElementById("ncr-number");
       const ncrNumber = ncrInput ? ncrInput.value : generateNcrNumber();
-      const lastModified = todayISO();
+      const lastModified = nowISODateTime();
 
       
       const newRow = {
